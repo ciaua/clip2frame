@@ -5,4 +5,4 @@ You may follow the following steps to reproduce the results presented in the ACM
 
 Feature extraction
 -----------
-Sample script: scripts/extract_melspec.py
+Sample script: scripts/extract_feats.py
