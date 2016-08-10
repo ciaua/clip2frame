@@ -50,6 +50,14 @@
 <h1>Directories in scripts/<a class="headerlink" href="#directories-in-scripts" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="folds">
 <h2>folds<a class="headerlink" href="#folds" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">dict_magna</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;magnatagatune.tr_va_te.npz&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">dict_magna</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="n">dict_medleydb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;medleydb.va_te.artist_based.05_05.npz&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">dict_medleydb</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+</div>
 </div>
 </div>
 

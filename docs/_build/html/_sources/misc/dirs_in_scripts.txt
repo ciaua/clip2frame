@@ -5,6 +5,7 @@ folds
 -----
 
 .. code-block:: python
+
     import numpy as np
     dict_magna = np.load('magnatagatune.tr_va_te.npz')
     print(dict_magna.keys())
