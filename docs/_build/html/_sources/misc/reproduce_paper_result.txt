@@ -5,10 +5,13 @@ You may follow the following steps to reproduce the results presented in the ACM
 Datasets
 --------
 Training:
-[MagnaTagATune](http://mirg.city.ac.uk/codeapps/the-magnatagatune-dataset)
+* `MagnaTagATune`_
 
 Frame-level evaluation:
-[MedleyDB](http://medleydb.weebly.com/)
+* `MedleyDB`_
+
+.. _MagnaTagATune: http://mirg.city.ac.uk/codeapps/the-magnatagatune-dataset
+.. _MedleyDB: http://medleydb.weebly.com
 
 Feature extraction
 ------------------
