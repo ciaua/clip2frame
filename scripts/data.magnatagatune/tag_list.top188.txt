@@ -1,0 +1,188 @@
+guitar
+classical
+slow
+techno
+strings
+drums
+electronic
+rock
+fast
+piano
+ambient
+beat
+violin
+vocal
+synth
+female
+indian
+opera
+male
+singing
+vocals
+no vocals
+harpsichord
+loud
+quiet
+flute
+woman
+male vocal
+no vocal
+pop
+soft
+sitar
+solo
+man
+classic
+choir
+voice
+new age
+dance
+male voice
+female vocal
+beats
+harp
+cello
+no voice
+weird
+country
+female voice
+metal
+choral
+electro
+drum
+male vocals
+jazz
+violins
+eastern
+female vocals
+instrumental
+bass
+modern
+no piano
+harpsicord
+string
+jazzy
+baroque
+foreign
+orchestra
+hard rock
+electric
+trance
+folk
+chorus
+chant
+voices
+classical guitar
+spanish
+heavy
+upbeat
+no guitar
+acoustic
+male singer
+electric guitar
+electronica
+oriental
+funky
+banjo
+tribal
+dark
+medieval
+man singing
+organ
+irish
+blues
+no singing
+bells
+percussion
+no drums
+woman singing
+noise
+spacey
+singer
+middle eastern
+female singer
+chanting
+no flute
+low
+strange
+wind
+calm
+lute
+heavy metal
+different
+punk
+oboe
+celtic
+flutes
+sax
+talking
+arabic
+hard
+women
+mellow
+funk
+fast beat
+house
+rap
+not english
+no violin
+fiddle
+female opera
+india
+water
+guitars
+chimes
+no beat
+male opera
+drone
+trumpet
+duet
+birds
+industrial
+sad
+plucking
+girl
+silence
+men
+horns
+repetitive
+operatic
+airy
+world
+eerie
+deep
+hip hop
+space
+keyboard
+light
+not classical
+not opera
+english
+not rock
+horn
+clapping
+acoustic guitar
+disco
+no strings
+orchestral
+old
+soft rock
+lol
+echo
+jungle
+no singer
+bongos
+reggae
+monks
+clarinet
+scary
+synthesizer
+female singing
+piano solo
+no voices
+woodwind
+happy
+viola
+soprano
+quick
+clasical
