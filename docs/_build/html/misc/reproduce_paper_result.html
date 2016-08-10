@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Introduction &mdash; clip2frame 0.1.0 documentation</title>
+    <title>Reproduce paper results &mdash; clip2frame 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -25,8 +25,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
-    <link rel="next" title="Reproduce paper results" href="reproduce_paper_result.html" />
-    <link rel="prev" title="Welcome to clip2frame’s documentation!" href="../index.html" /> 
+    <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -36,10 +35,7 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="reproduce_paper_result.html" title="Reproduce paper results"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="../index.html" title="Welcome to clip2frame’s documentation!"
+          <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -50,11 +46,38 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="what-is-it">
-<h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">¶</a></h2>
-<p>This is a project for event localization in music auto-tagging.</p>
+  <div class="section" id="reproduce-paper-results">
+<h1>Reproduce paper results<a class="headerlink" href="#reproduce-paper-results" title="Permalink to this headline">¶</a></h1>
+<p>You may follow the following steps to reproduce the results presented in the ACMMM2016 paper &#8220;Event Localization in Music Auto-tagging&#8221;</p>
+<div class="section" id="feature-extraction">
+<h2>Feature extraction<a class="headerlink" href="#feature-extraction" title="Permalink to this headline">¶</a></h2>
+<p>scripts/extract_feats.py</p>
+</div>
+<div class="section" id="make-features-and-annotations-into-experiment-data">
+<h2>Make features and annotations into experiment data<a class="headerlink" href="#make-features-and-annotations-into-experiment-data" title="Permalink to this headline">¶</a></h2>
+<p>???</p>
+</div>
+<div class="section" id="standardize-experiment-data">
+<h2>Standardize experiment data<a class="headerlink" href="#standardize-experiment-data" title="Permalink to this headline">¶</a></h2>
+<p>scripts/standardize_data.py</p>
+</div>
+<div class="section" id="train-model">
+<h2>Train model<a class="headerlink" href="#train-model" title="Permalink to this headline">¶</a></h2>
+<p>scripts/train_model.py</p>
+</div>
+<div class="section" id="get-thresholds">
+<h2>Get thresholds<a class="headerlink" href="#get-thresholds" title="Permalink to this headline">¶</a></h2>
+<p>With MagnaTagATune data:
+get_thresholds.with_magnatagatune.py</p>
+<p>With MedleyDB data:
+get_thresholds.with_medleydb.py</p>
+</div>
+<div class="section" id="evaluate-model">
+<h2>Evaluate model<a class="headerlink" href="#evaluate-model" title="Permalink to this headline">¶</a></h2>
+<p>For clip-level prediction:
+test_model.clip.py</p>
+<p>For frame-level prediction:
+test_model.frame.py</p>
 </div>
 </div>
 
@@ -66,22 +89,24 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Introduction</a><ul>
-<li><a class="reference internal" href="#what-is-it">What is it?</a></li>
+<li><a class="reference internal" href="#">Reproduce paper results</a><ul>
+<li><a class="reference internal" href="#feature-extraction">Feature extraction</a></li>
+<li><a class="reference internal" href="#make-features-and-annotations-into-experiment-data">Make features and annotations into experiment data</a></li>
+<li><a class="reference internal" href="#standardize-experiment-data">Standardize experiment data</a></li>
+<li><a class="reference internal" href="#train-model">Train model</a></li>
+<li><a class="reference internal" href="#get-thresholds">Get thresholds</a></li>
+<li><a class="reference internal" href="#evaluate-model">Evaluate model</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../index.html"
-                        title="previous chapter">Welcome to clip2frame&#8217;s documentation!</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="reproduce_paper_result.html"
-                        title="next chapter">Reproduce paper results</a></p>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/misc/intro.txt"
+      <li><a href="../_sources/misc/reproduce_paper_result.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -106,10 +131,7 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="reproduce_paper_result.html" title="Reproduce paper results"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="../index.html" title="Welcome to clip2frame’s documentation!"
+          <a href="intro.html" title="Introduction"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
       </ul>

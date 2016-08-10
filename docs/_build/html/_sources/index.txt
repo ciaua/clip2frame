@@ -11,9 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   intro
+   misc/intro
 
-   reproduce_paper_result
+   misc/reproduce_paper_result
 
 
 
