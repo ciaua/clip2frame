@@ -25,6 +25,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="Directories in scripts/" href="dirs_in_scripts.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
   <body role="document">
@@ -34,6 +35,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dirs_in_scripts.html" title="Directories in scripts/"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
@@ -49,6 +53,17 @@
   <div class="section" id="reproduce-paper-results">
 <h1>Reproduce paper results<a class="headerlink" href="#reproduce-paper-results" title="Permalink to this headline">¶</a></h1>
 <p>You may follow the following steps to reproduce the results presented in the ACMMM2016 paper &#8220;Event Localization in Music Auto-tagging&#8221;</p>
+<div class="section" id="datasets">
+<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<p>Training:</p>
+<ul class="simple">
+<li>[MagnaTagATune](<a class="reference external" href="http://mirg.city.ac.uk/codeapps/the-magnatagatune-dataset">http://mirg.city.ac.uk/codeapps/the-magnatagatune-dataset</a>)</li>
+</ul>
+<p>Frame-level evaluation:</p>
+<ul class="simple">
+<li>[MedleyDB](<a class="reference external" href="http://medleydb.weebly.com/">http://medleydb.weebly.com/</a>)</li>
+</ul>
+</div>
 <div class="section" id="feature-extraction">
 <h2>Feature extraction<a class="headerlink" href="#feature-extraction" title="Permalink to this headline">¶</a></h2>
 <p>scripts/extract_feats.py</p>
@@ -67,17 +82,25 @@
 </div>
 <div class="section" id="get-thresholds">
 <h2>Get thresholds<a class="headerlink" href="#get-thresholds" title="Permalink to this headline">¶</a></h2>
-<p>With MagnaTagATune data:
-get_thresholds.with_magnatagatune.py</p>
-<p>With MedleyDB data:
-get_thresholds.with_medleydb.py</p>
+<p>With MagnaTagATune data:</p>
+<ul class="simple">
+<li>get_thresholds.with_magnatagatune.py</li>
+</ul>
+<p>With MedleyDB data:</p>
+<ul class="simple">
+<li>get_thresholds.with_medleydb.py</li>
+</ul>
 </div>
 <div class="section" id="evaluate-model">
 <h2>Evaluate model<a class="headerlink" href="#evaluate-model" title="Permalink to this headline">¶</a></h2>
-<p>For clip-level prediction:
-test_model.clip.py</p>
-<p>For frame-level prediction:
-test_model.frame.py</p>
+<p>For clip-level prediction:</p>
+<ul class="simple">
+<li>test_model.clip.py</li>
+</ul>
+<p>For frame-level prediction:</p>
+<ul class="simple">
+<li>test_model.frame.py</li>
+</ul>
 </div>
 </div>
 
@@ -90,6 +113,7 @@ test_model.frame.py</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Reproduce paper results</a><ul>
+<li><a class="reference internal" href="#datasets">Datasets</a></li>
 <li><a class="reference internal" href="#feature-extraction">Feature extraction</a></li>
 <li><a class="reference internal" href="#make-features-and-annotations-into-experiment-data">Make features and annotations into experiment data</a></li>
 <li><a class="reference internal" href="#standardize-experiment-data">Standardize experiment data</a></li>
@@ -103,6 +127,9 @@ test_model.frame.py</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="intro.html"
                         title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dirs_in_scripts.html"
+                        title="next chapter">Directories in scripts/</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -130,6 +157,9 @@ test_model.frame.py</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="dirs_in_scripts.html" title="Directories in scripts/"
+             >next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>

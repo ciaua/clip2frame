@@ -1,8 +1,14 @@
 Directories in scripts/ 
 =======================
 
-folds
------
+data.magnatagatune/
+-------------------
+
+data.medleydb/
+--------------
+
+folds/
+------
 
 .. code-block:: python
 
@@ -12,4 +18,12 @@ folds
 
     dict_medleydb = np.load('medleydb.va_te.artist_based.05_05.npz')
     print(dict_medleydb.keys())
+
+
+standardizers/
+--------------
+
+
+models/
+-------
 
