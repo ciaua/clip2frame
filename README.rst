@@ -11,6 +11,6 @@ Tests
 -----
 We use pytest for tests
 
-The tests codes are in jj. The format of our test codes mostly follows the test codes in lasagne.
+The format of our test codes mostly follows the test codes in Lasagne.
 
 
