@@ -376,3 +376,17 @@ def linkcode_resolve(domain, info):
     tag = 'master' if 'dev' in release else ('v' + release)
     return "https://github.com/clip2frame/clip2frame/blob/%s/%s" % (tag,
                                                                     filename)
+
+
+# fool rtd into thinking a GPU is available, so all modules are importable
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
+
+import theano
+import theano.sandbox.cuda
+
+theano.config = Mock(device='gpu')
+theano.sandbox.cuda.cuda_enabled = True
+theano.sandbox.cuda.dnn = Mock(dnn_available=lambda: True)
