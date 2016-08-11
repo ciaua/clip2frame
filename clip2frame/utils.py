@@ -294,7 +294,8 @@ def train_multiscale(
         X_tr_list, y_tr, X_va_list, y_va,
         network,
         train_func, va_func,
-        n_epochs, batch_size, lr_var, param_fp='models/sample_model.npz'):
+        n_epochs, batch_size, lr_var, param_fp=None):
+
     print("Starting training...")
 
     best_va_epoch = 0
@@ -324,7 +325,8 @@ def train_multiscale(
             best_va_loss, mean_va_loss)
         if best_va_updated:
             best_va_epoch = epoch
-            save_model(param_fp, network)
+            if param_fp is not None:
+                save_model(param_fp, network)
 
         # Print the results for this epoch:
         print_in_train(epoch, n_epochs,

@@ -2,3 +2,5 @@
 =========================
 
 .. automodule:: clip2frame.layers
+
+.. rubric:: :doc:`layers`

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from clip2frame import utils
 import numpy as np
 import theano
@@ -14,12 +12,13 @@ if __name__ == '__main__':
     measure_type = 'f1'
 
     # Files and directories
-    param_fp = 'models/sample_model.npz'
-    data_te_dir = 'data.medleydb/sample_exp_data'
-    tag_tr_fp = 'data.magnatagatune/tag_list.top188.txt'
-    tag_te_fp = 'data.medleydb/instrument_list.top9.txt'
+    data_te_dir = '../data/data.medleydb/sample_exp_data'
+    tag_tr_fp = '../data/data.magnatagatune/tag_list.top188.txt'
+    tag_te_fp = '../data/data.medleydb/instrument_list.top9.txt'
     tag_conv_fp = \
-        'data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
+        '../data/data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
+    param_fp = '../data/models/sample_model.npz'
+    threshold_fp = '../data/models/sample_threshold.medleydb.npy'
 
     # Default setting
     scale_list = [
@@ -28,9 +27,8 @@ if __name__ == '__main__':
         "scale2",
     ]
 
-    n_scales = len(scale_list)
-
     # Load data
+    n_scales = len(scale_list)
     X_va_list, y_va = \
         utils.load_data_multiscale_va(
             data_te_dir, scale_list
@@ -90,4 +88,4 @@ if __name__ == '__main__':
                                                 search_range, step_size,
                                                 measure_func=measure_type,
                                                 n_processes=20)
-    np.save('models/sample_threshold.medleydb.npy', thresholds)
+    np.save(threshold_fp, thresholds)

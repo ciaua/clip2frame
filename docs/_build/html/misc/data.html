@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>clip2frame.layers &mdash; clip2frame 0.1.0 documentation</title>
+    <title>data/ &mdash; clip2frame 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -25,7 +25,8 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
-    <link rel="prev" title="data/" href="../misc/data.html" /> 
+    <link rel="next" title="clip2frame.layers" href="../modules/layers.html" />
+    <link rel="prev" title="Reproduce paper results" href="reproduce_paper_result.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,7 +39,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../misc/data.html" title="data/"
+          <a href="../modules/layers.html" title="clip2frame.layers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reproduce_paper_result.html" title="Reproduce paper results"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -49,9 +53,31 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-clip2frame.layers">
-<span id="clip2frame-layers"></span><h1><a class="reference internal" href="#module-clip2frame.layers" title="clip2frame.layers"><code class="xref py py-mod docutils literal"><span class="pre">clip2frame.layers</span></code></a><a class="headerlink" href="#module-clip2frame.layers" title="Permalink to this headline">¶</a></h1>
-<p class="rubric"><a class="reference internal" href="#"><span class="doc">clip2frame.layers</span></a></p>
+  <div class="section" id="data">
+<h1>data/<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="data-magnatagatune">
+<h2>data.magnatagatune/<a class="headerlink" href="#data-magnatagatune" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-medleydb">
+<h2>data.medleydb/<a class="headerlink" href="#data-medleydb" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="folds">
+<h2>folds/<a class="headerlink" href="#folds" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">dict_magna</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;magnatagatune.tr_va_te.npz&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">dict_magna</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="n">dict_medleydb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;medleydb.va_te.artist_based.05_05.npz&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">dict_medleydb</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="standardizers">
+<h2>standardizers/<a class="headerlink" href="#standardizers" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="models">
+<h2>models/<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 
@@ -60,13 +86,28 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">data/</a><ul>
+<li><a class="reference internal" href="#data-magnatagatune">data.magnatagatune/</a></li>
+<li><a class="reference internal" href="#data-medleydb">data.medleydb/</a></li>
+<li><a class="reference internal" href="#folds">folds/</a></li>
+<li><a class="reference internal" href="#standardizers">standardizers/</a></li>
+<li><a class="reference internal" href="#models">models/</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../misc/data.html"
-                        title="previous chapter">data/</a></p>
+  <p class="topless"><a href="reproduce_paper_result.html"
+                        title="previous chapter">Reproduce paper results</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../modules/layers.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">clip2frame.layers</span></code></a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/modules/layers.txt"
+      <li><a href="../_sources/misc/data.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -94,7 +135,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../misc/data.html" title="data/"
+          <a href="../modules/layers.html" title="clip2frame.layers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reproduce_paper_result.html" title="Reproduce paper results"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
       </ul>

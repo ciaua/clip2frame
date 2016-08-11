@@ -4,21 +4,23 @@ from clip2frame import utils, measure
 
 
 if __name__ == '__main__':
-    # Options
+    # Test settings
+    test_measure_type_list = ['mean_auc_y', 'mean_auc_x', 'map_y', 'map_x']
+    n_top_tags_te = 50  # 188
+
+    # Files
+    param_fp = '../data/models/sample_model.npz'
+    tag_tr_fp = '../data/data.magnatagatune/tag_list.top188.txt'
+    tag_te_fp = '../data/data.magnatagatune/tag_list.top{}.txt'.format(
+        n_top_tags_te)
+    data_dir = '../data/data.magnatagatune/sample_exp_data'
+
+    # Default settings
     scale_list = [
         "scale0",
         "scale1",
         "scale2",
     ]
-
-    test_measure_type_list = ['mean_auc_y', 'mean_auc_x', 'map_y', 'map_x']
-    n_top_tags_te = 50  # 188
-
-    # Files
-    param_fp = 'models/sample_model.npz'
-    tag_tr_fp = 'data.magnatagatune/tag_list.top188.txt'
-    tag_te_fp = 'data.magnatagatune/tag_list.top{}.txt'.format(n_top_tags_te)
-    data_dir = 'data.magnatagatune/sample_exp_data'
 
     # Load tag list
     tag_tr_list = utils.read_lines(tag_tr_fp)

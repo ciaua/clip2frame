@@ -13,7 +13,7 @@ def extract_melspec(in_fp, sr, win_size, hop_size, n_mels):
 
 
 if __name__ == '__main__':
-    in_fp = 'data.magnatagatune/sample_audio/sample_1.mp3'
+    in_fp = '../data/data.magnatagatune/sample_audio/sample_1.mp3'
 
     sr = 16000
     win_size = 512  # 512, 1024, 2048, 4096, 8192, 16384

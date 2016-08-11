@@ -8,8 +8,8 @@ from lasagne import layers
 
 
 if __name__ == '__main__':
-    # Options
-    layer_type = 'gaussian'  # 'pre-gaussian'
+    # Test Options
+    frame_layer_type = 'gaussian'  # 'pre-gaussian'
     test_measure_type_list = ['precision_micro', 'recall_micro', 'f1_micro']
 
     # test_measure_type_list = ['precision_micro', 'precision_macro',
@@ -20,16 +20,17 @@ if __name__ == '__main__':
     threshold_source = 'MedleyDB'  # 'MagnaTagATune'
 
     # Files and directories
-    base_tr_dir = 'data.magnatagatune'
-    base_te_dir = 'data.medleydb'
+    base_tr_dir = '../data/data.magnatagatune'
+    base_te_dir = '../data/data.medleydb'
 
-    param_fp = 'models/model.20160309_111546.npz'
-    standardizer_dir = 'standardizers'
+    model_dir = '../data/models'
+    param_fp = '../data/models/model.20160309_111546.npz'
+    standardizer_dir = '../data/standardizers'
 
-    tag_tr_fp = 'data.magnatagatune/tag_list.top188.txt'
-    tag_te_fp = 'data.medleydb/instrument_list.top9.txt'
+    tag_tr_fp = '../data/data.magnatagatune/tag_list.top188.txt'
+    tag_te_fp = '../data/data.medleydb/instrument_list.top9.txt'
     tag_conv_fp = \
-        'data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
+        '../data/data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
 
     # Default setting
     scale_list = ['logmelspec10000.16000_{}_512_128.0.raw'.format(win_size)
@@ -89,9 +90,9 @@ if __name__ == '__main__':
 
     # Load params
     utils.load_model(param_fp, network)
-    if layer_type == 'gaussian':
+    if frame_layer_type == 'gaussian':
         idx_layer = -3
-    elif layer_type == 'pre-gaussian':
+    elif frame_layer_type == 'pre-gaussian':
         idx_layer = -4
 
     # Get frame output layer
@@ -104,11 +105,13 @@ if __name__ == '__main__':
 
     # label threshold
     if threshold_source in ['magnatagatune', 'MagnaTagATune']:
-        thres_fp = 'models/threshold.20160309_111546.with_magnatagatune.npy'
+        thres_fp = os.path.join(
+            model_dir, 'threshold.20160309_111546.with_magnatagatune.npy')
         thresholds_raw = np.load(thres_fp)
         thresholds = thresholds_raw[tag_idx_list]
     elif threshold_source in ['MedleyDB', 'medleydb']:
-        thres_fp = 'models/threshold.20160309_111546.with_medleydb.top9.npy'
+        thres_fp = os.path.join(
+            model_dir, 'threshold.20160309_111546.with_medleydb.top9.npy')
         thresholds = np.load(thres_fp)
 
     # Predict

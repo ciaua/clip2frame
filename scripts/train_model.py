@@ -5,20 +5,20 @@ from clip2frame import utils
 
 if __name__ == '__main__':
     # Data options
-    data_dir = 'data.magnatagatune/sample_exp_data'
-    scale_list = [
-        "scale0",
-        "scale1",
-        "scale2",
-    ]
-
-    n_sources = len(scale_list)
+    data_dir = '../data/data.magnatagatune/sample_exp_data'
+    param_fp = '../data/models/sample_model.npz'
 
     # Training options
     lr = 0.01
     loss_function = lasagne.objectives.binary_crossentropy
     n_epochs = 10
     batch_size = 1  # we use 10 for real data
+    scale_list = [
+        "scale0",
+        "scale1",
+        "scale2",
+    ]
+    n_sources = len(scale_list)
 
     # Network options
     network_type = 'fcn_gaussian_multiscale'
@@ -67,5 +67,6 @@ if __name__ == '__main__':
         X_tr_list, y_tr, X_va_list, y_va,
         network,
         train_func, val_func,
-        n_epochs, batch_size, lr_var
+        n_epochs, batch_size, lr_var,
+        param_fp=param_fp
     )

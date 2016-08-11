@@ -1,4 +1,4 @@
-Directories in scripts/ 
+data/ 
 =======================
 
 data.magnatagatune/

@@ -13,10 +13,11 @@ if __name__ == '__main__':
     step_size = 1e-4
     measure_type = 'f1'
 
-    # Main
-    param_fp = 'models/sample_model.npz'
+    # Files and directories
+    data_dir = '../data/data.magnatagatune/sample_exp_data'
+    param_fp = '../data/models/sample_model.npz'
+    threshold_fp = '../data/models/sample_threshold.magnatagatune.npy'
 
-    # main
     # Default setting
     scale_list = [
         "scale0",
@@ -24,10 +25,8 @@ if __name__ == '__main__':
         "scale2",
     ]
 
-    n_scales = len(scale_list)
-
     # Load data
-    data_dir = 'data.magnatagatune/sample_exp_data'
+    n_scales = len(scale_list)
     X_va_list, y_va = \
         utils.load_data_multiscale_va(
             data_dir, scale_list
@@ -83,4 +82,4 @@ if __name__ == '__main__':
                                                 search_range, step_size,
                                                 measure_func=measure_type,
                                                 n_processes=20)
-    np.save('models/sample_threshold.magnatagatune.npy', thresholds)
+    np.save(threshold_fp, thresholds)

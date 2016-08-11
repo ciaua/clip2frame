@@ -15,7 +15,7 @@ Contents:
 
    misc/reproduce_paper_result
 
-   misc/dirs_in_scripts
+   misc/data
 
 API Reference
 -------------
