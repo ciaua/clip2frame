@@ -609,13 +609,7 @@ class Conv2DXLayer(layers.Layer):
 
 
 class GaussianScan1DLayer(layers.Layer):
-    """
-    GaussianScan1DLayer(incoming, filter_size, init_std,
-    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),
-    b=lasagne.init.Constant(0.), nonlinearity=lasagne.nonlinearities.rectify,
-    convolution=lasagne.theano_extensions.conv.conv1d_mc0, **kwargs)
-
-    1D convolutional layer
+    """ 1D Gaussian filter layer
 
     Performs a 1D convolution on its input and optionally adds a bias and
     applies an elementwise nonlinearity.

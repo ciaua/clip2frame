@@ -57,8 +57,8 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.layers.GaussianScan1DLayer" title="clip2frame.layers.GaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">GaussianScan1DLayer</span></code></a>(incoming,&nbsp;filter_size,&nbsp;...)</td>
-<td>1D convolutional layer</td>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.layers.GaussianScan1DLayer" title="clip2frame.layers.GaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">GaussianScan1DLayer</span></code></a>(incoming,&nbsp;filter_size[,&nbsp;...])</td>
+<td>1D Gaussian filter layer</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="clip2frame.layers.FixedGaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">FixedGaussianScan1DLayer</span></code></a>(incoming,&nbsp;...[,&nbsp;...])</td>
 <td>1D convolutional layer</td>
@@ -69,8 +69,8 @@
 <h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="clip2frame.layers.GaussianScan1DLayer">
-<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">GaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std</em>, <em>stride=1</em>, <em>pad=0</em>, <em>untie_biases=False</em>, <em>W=lasagne.init.GlorotUniform()</em>, <em>b=lasagne.init.Constant(0.)</em>, <em>nonlinearity=lasagne.nonlinearities.rectify</em>, <em>convolution=lasagne.theano_extensions.conv.conv1d_mc0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L611-L852"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
-<dd><p>1D convolutional layer</p>
+<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">GaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std=5.0</em>, <em>W_logstd=None</em>, <em>stride=1</em>, <em>pad=0</em>, <em>nonlinearity=None</em>, <em>convolution=&lt;function conv1d_mc0&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L611-L846"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D Gaussian filter layer</p>
 <p>Performs a 1D convolution on its input and optionally adds a bias and
 applies an elementwise nonlinearity.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -180,7 +180,7 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
 </table>
 <dl class="method">
 <dt id="clip2frame.layers.GaussianScan1DLayer.get_W_shape">
-<code class="descname">get_W_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer.get_W_shape"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L753-L762"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer.get_W_shape" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_W_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer.get_W_shape"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L747-L756"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer.get_W_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the shape of the weight matrix <cite>W</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -200,7 +200,7 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
 
 <dl class="class">
 <dt id="clip2frame.layers.FixedGaussianScan1DLayer">
-<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">FixedGaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std</em>, <em>stride=1</em>, <em>pad=0</em>, <em>untie_biases=False</em>, <em>W=lasagne.init.GlorotUniform()</em>, <em>b=lasagne.init.Constant(0.)</em>, <em>nonlinearity=lasagne.nonlinearities.rectify</em>, <em>convolution=lasagne.theano_extensions.conv.conv1d_mc0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#FixedGaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L857-L1098"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">FixedGaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std</em>, <em>stride=1</em>, <em>pad=0</em>, <em>untie_biases=False</em>, <em>W=lasagne.init.GlorotUniform()</em>, <em>b=lasagne.init.Constant(0.)</em>, <em>nonlinearity=lasagne.nonlinearities.rectify</em>, <em>convolution=lasagne.theano_extensions.conv.conv1d_mc0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#FixedGaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L851-L1092"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>1D convolutional layer
 Gaussian filter is not changing during the training</p>
 <p>Performs a 1D convolution on its input and optionally adds a bias and

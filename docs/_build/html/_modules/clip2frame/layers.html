@@ -659,13 +659,7 @@
 
 
 <div class="viewcode-block" id="GaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.GaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">GaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    GaussianScan1DLayer(incoming, filter_size, init_std,</span>
-<span class="sd">    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),</span>
-<span class="sd">    b=lasagne.init.Constant(0.), nonlinearity=lasagne.nonlinearities.rectify,</span>
-<span class="sd">    convolution=lasagne.theano_extensions.conv.conv1d_mc0, **kwargs)</span>
-
-<span class="sd">    1D convolutional layer</span>
+    <span class="sd">&quot;&quot;&quot; 1D Gaussian filter layer</span>
 
 <span class="sd">    Performs a 1D convolution on its input and optionally adds a bias and</span>
 <span class="sd">    applies an elementwise nonlinearity.</span>
