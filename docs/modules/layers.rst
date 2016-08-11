@@ -2,7 +2,6 @@ Layers
 ======
 
 .. automodule:: clip2frame.layers
-    :members:
 
 .. currentmodule:: clip2frame.layers
 

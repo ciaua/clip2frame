@@ -17,7 +17,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 # import os
-# import sys
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx.ext.linkcode',
     'sphinx.ext.autosummary',
     'numpydoc'
 ]
@@ -345,4 +346,32 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
+
 numpydoc_show_class_members = False
+
+
+def linkcode_resolve(domain, info):
+    def find_source():
+        # try to find the file and line number, based on code from
+        # numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
+        obj = sys.modules[info['module']]
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        import inspect
+        import os
+        import clip2frame
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(fn, start=os.path.dirname(clip2frame.__file__))
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
+
+    if domain != 'py' or not info['module']:
+        return None
+    try:
+        filename = 'lasagne/%s#L%d-L%d' % find_source()
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    tag = 'master' if 'dev' in release else ('v' + release)
+    return "https://github.com/clip2frame/clip2frame/blob/%s/%s" % (tag,
+                                                                    filename)

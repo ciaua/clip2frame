@@ -62,7 +62,7 @@
 
 
 <span class="c"># Duplicate of conv1d in lasagne.theano_extensions.conv</span>
-<div class="viewcode-block" id="conv1d_mc0"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.conv1d_mc0">[docs]</a><span class="k">def</span> <span class="nf">conv1d_mc0</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">filter_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">conv1d_mc0</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">filter_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
                <span class="n">border_mode</span><span class="o">=</span><span class="s">&#39;valid&#39;</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    using conv2d with width == 1</span>
@@ -86,11 +86,11 @@
         <span class="n">input_mc0</span><span class="p">,</span> <span class="n">filters_mc0</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape_mc0</span><span class="p">,</span>
         <span class="n">filter_shape</span><span class="o">=</span><span class="n">filter_shape_mc0</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">subsample</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
         <span class="n">border_mode</span><span class="o">=</span><span class="n">border_mode</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c"># drop the unused dimension</span></div>
+    <span class="k">return</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c"># drop the unused dimension</span>
 
 
 <span class="c"># modified from lasagne</span>
-<div class="viewcode-block" id="conv_output_length"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.conv_output_length">[docs]</a><span class="k">def</span> <span class="nf">conv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">conv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to compute the output size of a convolution operation</span>
 
 <span class="sd">    This function computes the length along a single axis, which corresponds</span>
@@ -155,11 +155,11 @@
     <span class="c"># np.ceil(output_length / stride)</span>
     <span class="n">output_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_length</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span>
 
-    <span class="k">return</span> <span class="n">output_length</span></div>
+    <span class="k">return</span> <span class="n">output_length</span>
 
 
 <span class="c"># modified from lasagne</span>
-<div class="viewcode-block" id="pool_output_length"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.pool_output_length">[docs]</a><span class="k">def</span> <span class="nf">pool_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">ignore_border</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">pool_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">ignore_border</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the output length of a pooling operator</span>
 <span class="sd">    along a single dimension.</span>
@@ -213,11 +213,11 @@
             <span class="n">output_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
                 <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">input_length</span> <span class="o">-</span> <span class="n">pool_size</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="k">return</span> <span class="n">output_length</span></div>
+    <span class="k">return</span> <span class="n">output_length</span>
 
 
 <span class="c"># add &#39;strictsamex&#39; method for pad</span>
-<div class="viewcode-block" id="Pool2DXLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.Pool2DXLayer">[docs]</a><span class="k">class</span> <span class="nc">Pool2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Pool2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    2D pooling layer</span>
 
@@ -353,11 +353,11 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
             <span class="n">pooled</span> <span class="o">=</span> <span class="n">pooled</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">length</span> <span class="ow">or</span> <span class="k">None</span><span class="p">,</span> <span class="p">:]</span>
 
-        <span class="k">return</span> <span class="n">pooled</span></div>
+        <span class="k">return</span> <span class="n">pooled</span>
 
 
 <span class="c"># add &#39;strictsamex&#39; method for pad</span>
-<div class="viewcode-block" id="MaxPool2DXLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.MaxPool2DXLayer">[docs]</a><span class="k">class</span> <span class="nc">MaxPool2DXLayer</span><span class="p">(</span><span class="n">Pool2DXLayer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">MaxPool2DXLayer</span><span class="p">(</span><span class="n">Pool2DXLayer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    2D max-pooling layer</span>
 
@@ -408,14 +408,14 @@
                                               <span class="n">pad</span><span class="p">,</span>
                                               <span class="n">ignore_border</span><span class="p">,</span>
                                               <span class="n">mode</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">,</span>
-                                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+                                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="c"># TODO: add reshape-based implementation to MaxPool*DLayer</span>
 <span class="c"># TODO: add MaxPool3DLayer</span>
 
 
 <span class="c"># add &#39;strictsamex&#39; method for pad</span>
-<div class="viewcode-block" id="Conv2DXLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.Conv2DXLayer">[docs]</a><span class="k">class</span> <span class="nc">Conv2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Conv2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    lasagne.layers.Conv2DLayer(incoming, num_filters, filter_size,</span>
 <span class="sd">    stride=(1, 1), pad=0, untie_biases=False,</span>
@@ -566,7 +566,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">biases_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">,</span>
                                     <span class="n">regularizable</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Conv2DXLayer.get_W_shape"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.Conv2DXLayer.get_W_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the shape of the weight matrix `W`.</span>
 
 <span class="sd">        Returns</span>
@@ -576,7 +576,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">num_input_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
@@ -655,7 +655,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="GaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.GaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">GaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
@@ -904,7 +904,7 @@
 <span class="c"># The following classes are for my experiments where 5D input is needed</span>
 
 
-<div class="viewcode-block" id="FixedGaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.FixedGaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">FixedGaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">FixedGaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    FixedGaussianScan1DLayer(incoming, filter_size, init_std,</span>
 <span class="sd">    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),</span>
@@ -1046,7 +1046,7 @@
                                        <span class="n">trainable</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_gaussian_filter</span><span class="p">()</span>
 
-<div class="viewcode-block" id="FixedGaussianScan1DLayer.get_W_shape"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.FixedGaussianScan1DLayer.get_W_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the shape of the weight matrix `W`.</span>
 
 <span class="sd">        Returns</span>
@@ -1055,7 +1055,7 @@
 <span class="sd">            The shape of the weight matrix.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
@@ -1145,7 +1145,7 @@
 
         <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
 </pre></div>
 
           </div>
