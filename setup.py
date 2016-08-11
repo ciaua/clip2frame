@@ -1,6 +1,6 @@
 from setuptools import setup
 
-import jj
+import clip2frame
 
 
 setup(name='clip2frame',
