@@ -3,6 +3,8 @@
 
 .. automodule:: clip2frame.network_design
 
+.. currentmodule:: clip2frame.network_design
+
 .. autosummary:: 
 
     fcn_gaussian_multiscale
