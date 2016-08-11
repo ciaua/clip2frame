@@ -4,7 +4,7 @@ import clip2frame
 
 
 setup(name='clip2frame',
-      version=jj.__version__,
+      version=clip2frame.__version__,
       description='Codes for event localization in music auto-tagging',
       url='https://github.com/ciaua/clip2frame',
       author='Jen-Yu Liu',
