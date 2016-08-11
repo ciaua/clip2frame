@@ -8,6 +8,8 @@
     GaussianScan1DLayer
     FixedGaussianScan1DLayer
 
+Details
+-------
 
 .. autoclass:: GaussianScan1DLayer
     :members:
