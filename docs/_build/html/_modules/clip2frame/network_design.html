@@ -1,0 +1,480 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clip2frame.network_design &mdash; clip2frame 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="clip2frame 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clip2frame.network_design</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">lasagne</span>
+<span class="kn">from</span> <span class="nn">lasagne</span> <span class="k">import</span> <span class="n">layers</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="k">as</span> <span class="nn">T</span>
+<span class="kn">from</span> <span class="nn">clip2frame</span> <span class="k">import</span> <span class="n">layers</span> <span class="k">as</span> <span class="n">cl</span>
+
+
+<span class="c"># Parts</span>
+<span class="k">def</span> <span class="nf">conv_layers</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">conv_dict</span><span class="p">,</span> <span class="n">total_stride</span><span class="p">,</span>
+                <span class="n">init_input_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p_dropout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">W_list</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">b_list</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">return_params</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    conv_dict:</span>
+<span class="sd">        a dictionary containing the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">        conv_filter_list: list</span>
+<span class="sd">            each element is in the form (# of filters, filter length)</span>
+
+<span class="sd">        pool_filter_list: list</span>
+<span class="sd">            each element is an integer</span>
+
+<span class="sd">        pool_stride_list: list</span>
+<span class="sd">            each element is int or None</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">conv_filter_list</span> <span class="o">=</span> <span class="n">conv_dict</span><span class="p">[</span><span class="s">&#39;conv_filter_list&#39;</span><span class="p">]</span>
+    <span class="n">pool_filter_list</span> <span class="o">=</span> <span class="n">conv_dict</span><span class="p">[</span><span class="s">&#39;pool_filter_list&#39;</span><span class="p">]</span>
+    <span class="n">pool_stride_list</span> <span class="o">=</span> <span class="n">conv_dict</span><span class="p">[</span><span class="s">&#39;pool_stride_list&#39;</span><span class="p">]</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conv_filter_list</span><span class="p">)</span> <span class="o">==</span>
+           <span class="nb">len</span><span class="p">(</span><span class="n">pool_filter_list</span><span class="p">)</span> <span class="o">==</span>
+           <span class="nb">len</span><span class="p">(</span><span class="n">pool_stride_list</span><span class="p">))</span>
+    <span class="n">n_layers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_filter_list</span><span class="p">)</span>
+
+    <span class="n">out_W_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">out_b_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># shared variables</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">W_list</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">W_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_layers</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">W_list</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="n">W_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">lasagne</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">GlorotUniform</span><span class="p">()</span> <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_layers</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">b_list</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">b_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_layers</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">b_list</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="n">b_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">lasagne</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span> <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_layers</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="p">[</span><span class="n">conv_filter</span><span class="p">,</span> <span class="n">pool_filter</span><span class="p">,</span> <span class="n">pool_stride</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">conv_filter_list</span><span class="p">,</span> <span class="n">pool_filter_list</span><span class="p">,</span> <span class="n">pool_stride_list</span><span class="p">,</span>
+                <span class="n">W_list</span><span class="p">,</span> <span class="n">b_list</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_filter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">n_filters</span><span class="p">,</span> <span class="n">filter_len</span> <span class="o">=</span> <span class="n">conv_filter</span>
+            <span class="n">conv_stride</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="s">&#39;strictsamex&#39;</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_filter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_filters</span><span class="p">,</span> <span class="n">filter_len</span><span class="p">,</span> <span class="n">conv_stride</span> <span class="o">=</span> <span class="n">conv_filter</span>
+            <span class="k">if</span> <span class="n">conv_stride</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+                <span class="n">conv_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">conv_stride</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="s">&#39;strictsamex&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+        <span class="n">total_stride</span> <span class="o">*=</span> <span class="n">conv_stride</span>
+
+        <span class="k">if</span> <span class="n">ii</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">feat_dim</span> <span class="o">=</span> <span class="n">init_input_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feat_dim</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Conv2DXLayer</span><span class="p">(</span>
+            <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">),</span>
+            <span class="n">num_filters</span><span class="o">=</span><span class="n">n_filters</span><span class="p">,</span> <span class="n">filter_size</span><span class="o">=</span><span class="p">(</span><span class="n">filter_len</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">),</span>
+            <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="n">conv_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">nonlinearity</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">nonlinearities</span><span class="o">.</span><span class="n">rectify</span><span class="p">,</span>
+            <span class="n">pad</span><span class="o">=</span><span class="n">pad</span><span class="p">,</span>
+            <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s">&#39;{}.conv{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="n">ii</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">out_W_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">out_b_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">pool_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">pool_filter</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">pool_stride</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+                <span class="n">stride</span> <span class="o">=</span> <span class="k">None</span>
+                <span class="n">total_stride</span> <span class="o">*=</span> <span class="n">pool_filter</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="n">pool_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">total_stride</span> <span class="o">*=</span> <span class="n">pool_stride</span>
+
+            <span class="c"># network = lasagne.layers.MaxPool2DLayer(</span>
+            <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">MaxPool2DXLayer</span><span class="p">(</span>
+                <span class="n">network</span><span class="p">,</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="n">pool_filter</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                <span class="n">ignore_border</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                <span class="c"># pad=&#39;strictsamex&#39;,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s">&#39;{}.maxpool{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="n">ii</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_params</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span><span class="p">,</span> <span class="n">out_W_list</span><span class="p">,</span> <span class="n">out_b_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span>
+
+
+<span class="c"># Multi-label (4D input)</span>
+<div class="viewcode-block" id="fcn_gaussian_multiscale"><a class="viewcode-back" href="../../modules/network_design.html#clip2frame.network_design.fcn_gaussian_multiscale">[docs]</a><span class="k">def</span> <span class="nf">fcn_gaussian_multiscale</span><span class="p">(</span>
+        <span class="n">input_var_list</span><span class="p">,</span>
+        <span class="n">early_conv_dict_list</span><span class="p">,</span>
+        <span class="n">late_conv_dict</span><span class="p">,</span>
+        <span class="n">dense_filter_size</span><span class="p">,</span>
+        <span class="n">scan_dict</span><span class="p">,</span>
+        <span class="n">final_pool_function</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+        <span class="n">input_size_list</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span> <span class="n">output_size</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span>
+        <span class="n">p_dropout</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    early_conv_dict_list: list</span>
+<span class="sd">        each element in the list is a dictionary containing the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    late_conv_dict: dict</span>
+<span class="sd">        it contains the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    dense_filter_size: int</span>
+<span class="sd">        the filter size of the final dense-like conv layer</span>
+
+<span class="sd">    pool_filter_list: list</span>
+<span class="sd">        each element is an integer</span>
+
+<span class="sd">    pool_stride_list: list</span>
+<span class="sd">        each element is int or None</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">early_conv_dict_list</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var_list</span><span class="p">)</span> <span class="o">==</span>
+           <span class="nb">len</span><span class="p">(</span><span class="n">input_size_list</span><span class="p">))</span>
+
+    <span class="c"># early conv layers</span>
+    <span class="n">conv_network_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">total_stride_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">jj</span><span class="p">,</span> <span class="p">[</span><span class="n">early_conv_dict</span><span class="p">,</span> <span class="n">input_var</span><span class="p">,</span> <span class="n">input_size</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+            <span class="n">early_conv_dict_list</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">input_size_list</span><span class="p">)):</span>
+        <span class="n">input_network</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="k">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span> <span class="n">input_var</span><span class="o">=</span><span class="n">input_var</span><span class="p">)</span>
+
+        <span class="n">total_stride</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">input_network</span><span class="p">,</span> <span class="n">early_conv_dict</span><span class="p">,</span>
+                                            <span class="n">total_stride</span><span class="p">,</span>
+                                            <span class="n">init_input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
+                                            <span class="n">p_dropout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                            <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;early{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jj</span><span class="p">))</span>
+        <span class="n">total_stride_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_stride</span><span class="p">)</span>
+        <span class="n">conv_network_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    # upsampling</span>
+<span class="sd">    conv_network_list = [cl.LocalExtend(net, axis=2, extend_size=ts)</span>
+<span class="sd">                         for net, ts in zip(conv_network_list,</span>
+<span class="sd">                                            total_stride_list)]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ConcatLayer</span><span class="p">(</span><span class="n">conv_network_list</span><span class="p">,</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">cropping</span><span class="o">=</span><span class="p">[</span><span class="k">None</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">],</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s">&#39;MultisourceConcatenate&#39;</span><span class="p">)</span>
+
+    <span class="c"># late conv layers (dense layers)</span>
+    <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">late_conv_dict</span><span class="p">,</span>
+                                        <span class="n">total_stride</span><span class="p">,</span>
+                                        <span class="n">init_input_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">p_dropout</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">,</span>
+                                        <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;late&#39;</span><span class="p">)</span>
+
+    <span class="c"># frame output layer. every frame has a value</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Conv2DXLayer</span><span class="p">(</span>
+        <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">),</span>
+        <span class="n">num_filters</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">filter_size</span><span class="o">=</span><span class="p">(</span><span class="n">dense_filter_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">nonlinearity</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">nonlinearities</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">,</span>
+        <span class="n">W</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">GlorotUniform</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c"># Gaussian scanning</span>
+    <span class="n">scan_filter_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_filter_list&#39;</span><span class="p">]</span>
+    <span class="n">scan_stride_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_stride_list&#39;</span><span class="p">]</span>
+    <span class="n">scan_std_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_std_list&#39;</span><span class="p">]</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="p">[</span><span class="n">filter_size</span><span class="p">,</span> <span class="n">stride_size</span><span class="p">,</span> <span class="n">init_std</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">scan_filter_list</span><span class="p">,</span> <span class="n">scan_stride_list</span><span class="p">,</span> <span class="n">scan_std_list</span><span class="p">)):</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">GaussianScan1DLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span>
+                                         <span class="n">filter_size</span><span class="p">,</span> <span class="n">init_std</span><span class="p">,</span>
+                                         <span class="n">stride</span><span class="o">=</span><span class="n">stride_size</span><span class="p">,</span>
+                                         <span class="n">pad</span><span class="o">=</span><span class="s">&#39;strictsame&#39;</span><span class="p">,</span>
+                                         <span class="c"># pad=&#39;full&#39;,</span>
+                                         <span class="n">name</span><span class="o">=</span><span class="s">&#39;scan_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="p">))</span>
+
+    <span class="c"># pool</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalPoolLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span>
+                                     <span class="n">pool_function</span><span class="o">=</span><span class="n">final_pool_function</span><span class="p">)</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="fcn_fixedgaussian_multiscale"><a class="viewcode-back" href="../../modules/network_design.html#clip2frame.network_design.fcn_fixedgaussian_multiscale">[docs]</a><span class="k">def</span> <span class="nf">fcn_fixedgaussian_multiscale</span><span class="p">(</span>
+        <span class="n">input_var_list</span><span class="p">,</span>
+        <span class="n">early_conv_dict_list</span><span class="p">,</span>
+        <span class="n">late_conv_dict</span><span class="p">,</span>
+        <span class="n">dense_filter_size</span><span class="p">,</span>
+        <span class="n">scan_dict</span><span class="p">,</span>
+        <span class="n">final_pool_function</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+        <span class="n">input_size_list</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span> <span class="n">output_size</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span>
+        <span class="n">p_dropout</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    early_conv_dict_list: list</span>
+<span class="sd">        each element in the list is a dictionary containing the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    late_conv_dict: dict</span>
+<span class="sd">        it contains the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    dense_filter_size: int</span>
+<span class="sd">        the filter size of the final dense-like conv layer</span>
+
+<span class="sd">    pool_filter_list: list</span>
+<span class="sd">        each element is an integer</span>
+
+<span class="sd">    pool_stride_list: list</span>
+<span class="sd">        each element is int or None</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">early_conv_dict_list</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var_list</span><span class="p">)</span> <span class="o">==</span>
+           <span class="nb">len</span><span class="p">(</span><span class="n">input_size_list</span><span class="p">))</span>
+
+    <span class="c"># early conv layers</span>
+    <span class="n">conv_network_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">total_stride_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">jj</span><span class="p">,</span> <span class="p">[</span><span class="n">early_conv_dict</span><span class="p">,</span> <span class="n">input_var</span><span class="p">,</span> <span class="n">input_size</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+            <span class="n">early_conv_dict_list</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">input_size_list</span><span class="p">)):</span>
+        <span class="n">input_network</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="k">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span> <span class="n">input_var</span><span class="o">=</span><span class="n">input_var</span><span class="p">)</span>
+
+        <span class="n">total_stride</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">input_network</span><span class="p">,</span> <span class="n">early_conv_dict</span><span class="p">,</span>
+                                            <span class="n">total_stride</span><span class="p">,</span>
+                                            <span class="n">init_input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
+                                            <span class="n">p_dropout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                            <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;early{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jj</span><span class="p">))</span>
+        <span class="n">total_stride_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_stride</span><span class="p">)</span>
+        <span class="n">conv_network_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    # upsampling</span>
+<span class="sd">    conv_network_list = [cl.LocalExtend(net, axis=2, extend_size=ts)</span>
+<span class="sd">                         for net, ts in zip(conv_network_list,</span>
+<span class="sd">                                            total_stride_list)]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ConcatLayer</span><span class="p">(</span><span class="n">conv_network_list</span><span class="p">,</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">cropping</span><span class="o">=</span><span class="p">[</span><span class="k">None</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">],</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s">&#39;MultisourceConcatenate&#39;</span><span class="p">)</span>
+
+    <span class="c"># late conv layers (dense layers)</span>
+    <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">late_conv_dict</span><span class="p">,</span>
+                                        <span class="n">total_stride</span><span class="p">,</span>
+                                        <span class="n">init_input_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">p_dropout</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">,</span>
+                                        <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;late&#39;</span><span class="p">)</span>
+
+    <span class="c"># frame output layer. every frame has a value</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Conv2DXLayer</span><span class="p">(</span>
+        <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">),</span>
+        <span class="n">num_filters</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">filter_size</span><span class="o">=</span><span class="p">(</span><span class="n">dense_filter_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">nonlinearity</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">nonlinearities</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">,</span>
+        <span class="n">W</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">GlorotUniform</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c"># Gaussian scanning</span>
+    <span class="n">scan_filter_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_filter_list&#39;</span><span class="p">]</span>
+    <span class="n">scan_stride_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_stride_list&#39;</span><span class="p">]</span>
+    <span class="n">scan_std_list</span> <span class="o">=</span> <span class="n">scan_dict</span><span class="p">[</span><span class="s">&#39;scan_std_list&#39;</span><span class="p">]</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="p">[</span><span class="n">filter_size</span><span class="p">,</span> <span class="n">stride_size</span><span class="p">,</span> <span class="n">init_std</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">scan_filter_list</span><span class="p">,</span> <span class="n">scan_stride_list</span><span class="p">,</span> <span class="n">scan_std_list</span><span class="p">)):</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">FixedGaussianScan1DLayer</span><span class="p">(</span>
+            <span class="n">network</span><span class="p">,</span>
+            <span class="n">filter_size</span><span class="p">,</span> <span class="n">init_std</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="n">stride_size</span><span class="p">,</span>
+            <span class="n">pad</span><span class="o">=</span><span class="s">&#39;strictsame&#39;</span><span class="p">,</span>
+            <span class="c"># pad=&#39;full&#39;,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s">&#39;scan_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c"># pool</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalPoolLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span>
+                                     <span class="n">pool_function</span><span class="o">=</span><span class="n">final_pool_function</span><span class="p">)</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="fcn_multiscale"><a class="viewcode-back" href="../../modules/network_design.html#clip2frame.network_design.fcn_multiscale">[docs]</a><span class="k">def</span> <span class="nf">fcn_multiscale</span><span class="p">(</span>
+        <span class="n">input_var_list</span><span class="p">,</span>
+        <span class="n">early_conv_dict_list</span><span class="p">,</span>
+        <span class="n">late_conv_dict</span><span class="p">,</span>
+        <span class="n">dense_filter_size</span><span class="p">,</span>
+        <span class="n">final_pool_function</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+        <span class="n">input_size_list</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span> <span class="n">output_size</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span>
+        <span class="n">p_dropout</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    early_conv_dict_list: list</span>
+<span class="sd">        each element in the list is a dictionary containing the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    late_conv_dict: dict</span>
+<span class="sd">        it contains the following keys:</span>
+<span class="sd">        &#39;conv_filter_list&#39;, &#39;pool_filter_list&#39;, &#39;pool_stride_list&#39;</span>
+
+<span class="sd">    dense_filter_size: int</span>
+<span class="sd">        the filter size of the final dense-like conv layer</span>
+
+<span class="sd">    pool_filter_list: list</span>
+<span class="sd">        each element is an integer</span>
+
+<span class="sd">    pool_stride_list: list</span>
+<span class="sd">        each element is int or None</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">early_conv_dict_list</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var_list</span><span class="p">)</span> <span class="o">==</span>
+           <span class="nb">len</span><span class="p">(</span><span class="n">input_size_list</span><span class="p">))</span>
+
+    <span class="c"># early conv layers</span>
+    <span class="n">conv_network_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">total_stride_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">jj</span><span class="p">,</span> <span class="p">[</span><span class="n">early_conv_dict</span><span class="p">,</span> <span class="n">input_var</span><span class="p">,</span> <span class="n">input_size</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+            <span class="n">early_conv_dict_list</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">input_size_list</span><span class="p">)):</span>
+        <span class="n">input_network</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="k">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span> <span class="n">input_var</span><span class="o">=</span><span class="n">input_var</span><span class="p">)</span>
+
+        <span class="n">total_stride</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">input_network</span><span class="p">,</span> <span class="n">early_conv_dict</span><span class="p">,</span>
+                                            <span class="n">total_stride</span><span class="p">,</span>
+                                            <span class="n">init_input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
+                                            <span class="n">p_dropout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                            <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;early{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jj</span><span class="p">))</span>
+        <span class="n">total_stride_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_stride</span><span class="p">)</span>
+        <span class="n">conv_network_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+
+    <span class="c"># Concatenate</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ConcatLayer</span><span class="p">(</span><span class="n">conv_network_list</span><span class="p">,</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">cropping</span><span class="o">=</span><span class="p">[</span><span class="k">None</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">],</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s">&#39;MultisourceConcatenate&#39;</span><span class="p">)</span>
+
+    <span class="c"># late conv layers (dense layers)</span>
+    <span class="n">network</span><span class="p">,</span> <span class="n">total_stride</span> <span class="o">=</span> <span class="n">conv_layers</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">late_conv_dict</span><span class="p">,</span>
+                                        <span class="n">total_stride</span><span class="p">,</span>
+                                        <span class="n">init_input_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">p_dropout</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">,</span>
+                                        <span class="n">base_name</span><span class="o">=</span><span class="s">&#39;late&#39;</span><span class="p">)</span>
+
+    <span class="c"># frame output layer. every frame has a value</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Conv2DXLayer</span><span class="p">(</span>
+        <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p_dropout</span><span class="p">),</span>
+        <span class="n">num_filters</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">filter_size</span><span class="o">=</span><span class="p">(</span><span class="n">dense_filter_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">nonlinearity</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">nonlinearities</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">,</span>
+        <span class="n">W</span><span class="o">=</span><span class="n">lasagne</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">GlorotUniform</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c"># pool</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalPoolLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span>
+                                     <span class="n">pool_function</span><span class="o">=</span><span class="n">final_pool_function</span><span class="p">)</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">network</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jen-Yu Liu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

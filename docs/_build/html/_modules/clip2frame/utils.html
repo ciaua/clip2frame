@@ -1,0 +1,606 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clip2frame.utils &mdash; clip2frame 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="clip2frame 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clip2frame.utils</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="k">as</span> <span class="nn">T</span>
+<span class="kn">import</span> <span class="nn">lasagne</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">f1_score</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span>
+
+<span class="kn">from</span> <span class="nn">clip2frame</span> <span class="k">import</span> <span class="n">network_design</span>
+
+
+<span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">exception_verbosity</span> <span class="o">=</span> <span class="s">&#39;high&#39;</span>
+
+<span class="n">floatX</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span>
+<span class="n">epsilon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+
+<span class="c"># IO</span>
+<span class="n">ver</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span>
+<span class="k">if</span> <span class="n">ver</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">pk</span>
+    <span class="n">opts_write</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;encoding&#39;</span><span class="p">:</span> <span class="s">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s">&#39;newline&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">}</span>
+    <span class="n">opts_read</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;encoding&#39;</span><span class="p">:</span> <span class="s">&#39;utf-8&#39;</span><span class="p">}</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cPickle</span> <span class="k">as</span> <span class="nn">pk</span>
+    <span class="n">opts_write</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">opts_read</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="c"># IO</span>
+<span class="k">def</span> <span class="nf">read_lines</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">opdrf</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">opdrf</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span> <span class="nf">read_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">opts_read</span><span class="p">)</span> <span class="k">as</span> <span class="n">opdrf</span><span class="p">:</span>
+        <span class="n">csv_reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">opdrf</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">csv_reader</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span> <span class="nf">pickle</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For python 3 compatibility, use protocol 2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.pkl&#39;</span><span class="p">):</span>
+        <span class="n">file_path</span> <span class="o">+=</span> <span class="s">&#39;.pkl&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">opdwf</span><span class="p">:</span>
+        <span class="n">pk</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">opdwf</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="n">protocol</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">unpickle</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">opdrf</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pk</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">opdrf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="c"># Load data</span>
+<span class="k">def</span> <span class="nf">load_data_multiscale</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">scale_list</span><span class="p">):</span>
+    <span class="n">X_tr_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">y_tr_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="n">X_te_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">y_te_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="n">X_va_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">y_va_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">scale</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scale_list</span><span class="p">):</span>
+        <span class="n">feat_tr_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                  <span class="s">&#39;feat.tr.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">target_tr_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                    <span class="s">&#39;target.tr.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">feat_va_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                  <span class="s">&#39;feat.va.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">target_va_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                    <span class="s">&#39;target.va.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">feat_te_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                  <span class="s">&#39;feat.te.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">target_te_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                    <span class="s">&#39;target.te.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+
+        <span class="n">X_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">feat_tr_fp</span><span class="p">)</span>
+        <span class="n">y_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target_tr_fp</span><span class="p">)</span>
+
+        <span class="n">X_va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">feat_va_fp</span><span class="p">)</span>
+        <span class="n">y_va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target_va_fp</span><span class="p">)</span>
+
+        <span class="n">X_te</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">feat_te_fp</span><span class="p">)</span>
+        <span class="n">y_te</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target_te_fp</span><span class="p">)</span>
+
+        <span class="c"># append</span>
+        <span class="n">X_tr_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X_tr</span><span class="p">)</span>
+        <span class="n">y_tr_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_tr</span><span class="p">)</span>
+
+        <span class="n">X_te_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X_te</span><span class="p">)</span>
+        <span class="n">y_te_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_te</span><span class="p">)</span>
+
+        <span class="n">X_va_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X_va</span><span class="p">)</span>
+        <span class="n">y_va_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_va</span><span class="p">)</span>
+
+    <span class="n">y_tr</span> <span class="o">=</span> <span class="n">y_tr_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_va</span> <span class="o">=</span> <span class="n">y_va_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_te</span> <span class="o">=</span> <span class="n">y_te_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">X_tr_list</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">,</span> <span class="n">X_va_list</span><span class="p">,</span> <span class="n">y_va</span><span class="p">,</span> <span class="n">X_te_list</span><span class="p">,</span> <span class="n">y_te</span>
+
+
+<span class="k">def</span> <span class="nf">load_data_multiscale_test</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">scale_list</span><span class="p">):</span>
+    <span class="n">X_te_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">y_te_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">scale</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scale_list</span><span class="p">):</span>
+        <span class="n">feat_te_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                  <span class="s">&#39;feat.te.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">target_te_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                    <span class="s">&#39;target.te.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+
+        <span class="n">X_te</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">feat_te_fp</span><span class="p">)</span>
+        <span class="n">y_te</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target_te_fp</span><span class="p">)</span>
+
+        <span class="c"># append</span>
+        <span class="n">X_te_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X_te</span><span class="p">)</span>
+        <span class="n">y_te_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_te</span><span class="p">)</span>
+
+    <span class="n">y_te</span> <span class="o">=</span> <span class="n">y_te_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">X_te_list</span><span class="p">,</span> <span class="n">y_te</span>
+
+
+<span class="k">def</span> <span class="nf">load_data_multiscale_va</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">scale_list</span><span class="p">):</span>
+    <span class="n">X_va_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">y_va_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">scale</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scale_list</span><span class="p">):</span>
+        <span class="n">feat_va_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                  <span class="s">&#39;feat.va.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">target_va_fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span>
+                                    <span class="s">&#39;target.va.{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+
+        <span class="n">X_va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">feat_va_fp</span><span class="p">)</span>
+        <span class="n">y_va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target_va_fp</span><span class="p">)</span>
+
+        <span class="c"># append</span>
+        <span class="n">X_va_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X_va</span><span class="p">)</span>
+        <span class="n">y_va_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_va</span><span class="p">)</span>
+
+    <span class="n">y_va</span> <span class="o">=</span> <span class="n">y_va_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">X_va_list</span><span class="p">,</span> <span class="n">y_va</span>
+
+
+<span class="c"># Make networks</span>
+<span class="k">def</span> <span class="nf">make_network_multiscale</span><span class="p">(</span>
+        <span class="n">network_type</span><span class="p">,</span> <span class="n">loss_function</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">n_scales</span><span class="p">,</span> <span class="n">net_options</span><span class="p">,</span>
+        <span class="n">do_clip</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">make_pr_func</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+    <span class="n">target_var</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="s">&#39;targets&#39;</span><span class="p">)</span>
+    <span class="n">lr_var</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">floatX</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;Building model and compiling functions...&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_scales</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">input_var_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">T</span><span class="o">.</span><span class="n">tensor4</span><span class="p">(</span><span class="s">&#39;inputs{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_scales</span><span class="p">)]</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">network_design</span><span class="p">,</span> <span class="n">network_type</span><span class="p">)(</span><span class="n">input_var_list</span><span class="p">,</span>
+                                                        <span class="o">**</span><span class="n">net_options</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># if the network requires input_var not a list, set n_sources=-1</span>
+        <span class="n">input_var_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">T</span><span class="o">.</span><span class="n">addbroadcast</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">tensor4</span><span class="p">(</span><span class="s">&#39;inputs{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+                          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">network_design</span><span class="p">,</span> <span class="n">network_type</span><span class="p">)(</span><span class="n">input_var_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="o">**</span><span class="n">net_options</span><span class="p">)</span>
+
+    <span class="c"># Compute loss</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">do_clip</span><span class="p">:</span>
+        <span class="n">prediction</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">one</span><span class="o">-</span><span class="n">epsilon</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_function</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">target_var</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">get_all_params</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+    <span class="n">updates</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">adagrad</span><span class="p">(</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="n">lr_var</span><span class="p">)</span>
+
+    <span class="n">test_prediction</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">do_clip</span><span class="p">:</span>
+        <span class="n">test_prediction</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">test_prediction</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">one</span><span class="o">-</span><span class="n">epsilon</span><span class="p">)</span>
+    <span class="n">test_loss</span> <span class="o">=</span> <span class="n">loss_function</span><span class="p">(</span><span class="n">test_prediction</span><span class="p">,</span> <span class="n">target_var</span><span class="p">)</span>
+    <span class="n">test_loss</span> <span class="o">=</span> <span class="n">test_loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="n">train_func</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">input_var_list</span><span class="o">+</span><span class="p">[</span><span class="n">target_var</span><span class="p">],</span>
+                                 <span class="n">loss</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="n">updates</span><span class="p">)</span>
+    <span class="n">val_func</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">input_var_list</span><span class="o">+</span><span class="p">[</span><span class="n">target_var</span><span class="p">],</span>
+                               <span class="p">[</span><span class="n">test_prediction</span><span class="p">,</span> <span class="n">test_loss</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">make_pr_func</span><span class="p">:</span>
+        <span class="n">pr_func</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">input_var_list</span><span class="p">,</span> <span class="n">test_prediction</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">network</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">lr_var</span><span class="p">,</span> <span class="n">train_func</span><span class="p">,</span> <span class="n">val_func</span><span class="p">,</span> <span class="n">pr_func</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">network</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">lr_var</span><span class="p">,</span> <span class="n">train_func</span><span class="p">,</span> <span class="n">val_func</span>
+
+
+<span class="k">def</span> <span class="nf">make_network_multiscale_test</span><span class="p">(</span>
+        <span class="n">network_type</span><span class="p">,</span> <span class="n">n_scales</span><span class="p">,</span> <span class="n">net_options</span><span class="p">,</span> <span class="n">do_clip</span><span class="o">=</span><span class="k">True</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;Building model and compiling functions...&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_scales</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">input_var_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">T</span><span class="o">.</span><span class="n">tensor4</span><span class="p">(</span><span class="s">&#39;inputs{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_scales</span><span class="p">)]</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">network_design</span><span class="p">,</span> <span class="n">network_type</span><span class="p">)(</span><span class="n">input_var_list</span><span class="p">,</span>
+                                                        <span class="o">**</span><span class="n">net_options</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># if the network requires input_var not a list, set n_sources=-1</span>
+        <span class="n">input_var_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">T</span><span class="o">.</span><span class="n">addbroadcast</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">tensor4</span><span class="p">(</span><span class="s">&#39;inputs{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+                          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">network_design</span><span class="p">,</span> <span class="n">network_type</span><span class="p">)(</span><span class="n">input_var_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="o">**</span><span class="n">net_options</span><span class="p">)</span>
+
+    <span class="n">test_prediction</span> <span class="o">=</span> <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">do_clip</span><span class="p">:</span>
+        <span class="n">test_prediction</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">test_prediction</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">one</span><span class="o">-</span><span class="n">epsilon</span><span class="p">)</span>
+
+    <span class="n">pr_func</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">input_var_list</span><span class="p">,</span> <span class="n">test_prediction</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">network</span><span class="p">,</span> <span class="n">input_var_list</span><span class="p">,</span> <span class="n">pr_func</span>
+
+
+<span class="c"># Iterate inputs</span>
+<span class="k">def</span> <span class="nf">iterate_minibatches_multiscale</span><span class="p">(</span><span class="n">inputs_list</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span>
+                                   <span class="n">batchsize</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">inputs_list</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>
+
+    <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">batchsize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">batchsize</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+            <span class="n">excerpt</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">batchsize</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">excerpt</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start_idx</span><span class="p">,</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">batchsize</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="p">[</span><span class="n">inputs</span><span class="p">[</span><span class="n">excerpt</span><span class="p">]</span> <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">inputs_list</span><span class="p">],</span> \
+            <span class="n">targets</span><span class="p">[</span><span class="n">excerpt</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">iterate_minibatches_multiscale_feat</span><span class="p">(</span><span class="n">inputs_list</span><span class="p">,</span> <span class="n">batchsize</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">inputs_list</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">batchsize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">batchsize</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+            <span class="n">excerpt</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">batchsize</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">excerpt</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start_idx</span><span class="p">,</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">batchsize</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="p">[</span><span class="n">inputs</span><span class="p">[</span><span class="n">excerpt</span><span class="p">]</span> <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">inputs_list</span><span class="p">]</span>
+
+
+<span class="c"># Functions used in train for recording and printing</span>
+<span class="k">def</span> <span class="nf">check_best_loss</span><span class="p">(</span><span class="n">best_val_loss</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">val_loss</span> <span class="o">&lt;</span> <span class="n">best_val_loss</span><span class="p">:</span>
+        <span class="n">best_val_loss</span> <span class="o">=</span> <span class="n">val_loss</span>
+
+        <span class="n">best_val_updated</span> <span class="o">=</span> <span class="k">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_val_updated</span> <span class="o">=</span> <span class="k">False</span>
+    <span class="k">return</span> <span class="n">best_val_loss</span><span class="p">,</span> <span class="n">best_val_updated</span>
+
+
+<span class="k">def</span> <span class="nf">print_in_train</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">n_epochs</span><span class="p">,</span>
+                   <span class="n">mean_tr_loss</span><span class="p">,</span> <span class="n">mean_va_loss</span><span class="p">,</span>
+                   <span class="n">best_va_epoch</span><span class="p">,</span> <span class="n">best_va_loss</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;Epoch {} of {}.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">n_epochs</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;  training loss:        {:.6f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mean_tr_loss</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;  validation loss:      {:.6f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mean_va_loss</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;  best va (epoch, loss):({}, {:.6f})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">best_va_epoch</span><span class="p">,</span> <span class="n">best_va_loss</span>
+    <span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+
+
+<span class="c"># Multiple input sources</span>
+<div class="viewcode-block" id="train_multiscale"><a class="viewcode-back" href="../../modules/utils.html#clip2frame.utils.train_multiscale">[docs]</a><span class="k">def</span> <span class="nf">train_multiscale</span><span class="p">(</span>
+        <span class="n">X_tr_list</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">,</span> <span class="n">X_va_list</span><span class="p">,</span> <span class="n">y_va</span><span class="p">,</span>
+        <span class="n">network</span><span class="p">,</span>
+        <span class="n">train_func</span><span class="p">,</span> <span class="n">va_func</span><span class="p">,</span>
+        <span class="n">n_epochs</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">lr_var</span><span class="p">,</span> <span class="n">param_fp</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;Starting training...&quot;</span><span class="p">)</span>
+
+    <span class="n">best_va_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">best_va_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_epochs</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">train_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">train_batches</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># Training</span>
+        <span class="k">for</span> <span class="n">batch_</span> <span class="ow">in</span> <span class="n">iterate_minibatches_multiscale</span><span class="p">(</span><span class="n">X_tr_list</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">,</span>
+                                                     <span class="n">batch_size</span><span class="p">,</span>
+                                                     <span class="n">shuffle</span><span class="o">=</span><span class="k">True</span><span class="p">):</span>
+            <span class="n">inputs_list</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">batch_</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">inputs_list</span><span class="o">+</span><span class="p">[</span><span class="n">targets</span><span class="p">]</span>
+            <span class="n">train_loss_one</span> <span class="o">=</span> <span class="n">train_func</span><span class="p">(</span><span class="o">*</span><span class="n">temp</span><span class="p">)</span>
+
+            <span class="n">train_loss</span> <span class="o">+=</span> <span class="n">train_loss_one</span>
+            <span class="n">train_batches</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">mean_tr_loss</span> <span class="o">=</span> <span class="n">train_loss</span><span class="o">/</span><span class="n">train_batches</span>
+
+        <span class="c"># Validation</span>
+        <span class="n">pre_list</span><span class="p">,</span> <span class="n">mean_va_loss</span> <span class="o">=</span> <span class="n">validate_multiscale</span><span class="p">(</span><span class="n">X_va_list</span><span class="p">,</span> <span class="n">y_va</span><span class="p">,</span>
+                                                     <span class="n">va_func</span><span class="p">)</span>
+
+        <span class="c"># Check best loss</span>
+        <span class="n">best_va_loss</span><span class="p">,</span> <span class="n">best_va_updated</span> <span class="o">=</span> <span class="n">check_best_loss</span><span class="p">(</span>
+            <span class="n">best_va_loss</span><span class="p">,</span> <span class="n">mean_va_loss</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">best_va_updated</span><span class="p">:</span>
+            <span class="n">best_va_epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+            <span class="k">if</span> <span class="n">param_fp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+                <span class="n">save_model</span><span class="p">(</span><span class="n">param_fp</span><span class="p">,</span> <span class="n">network</span><span class="p">)</span>
+
+        <span class="c"># Print the results for this epoch:</span>
+        <span class="n">print_in_train</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">n_epochs</span><span class="p">,</span>
+                       <span class="n">mean_tr_loss</span><span class="p">,</span> <span class="n">mean_va_loss</span><span class="p">,</span>
+                       <span class="n">best_va_epoch</span><span class="p">,</span> <span class="n">best_va_loss</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">validate_multiscale</span><span class="p">(</span><span class="n">X_list</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">val_func</span><span class="p">):</span>
+    <span class="n">val_loss</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">val_batches</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">pre_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">iterate_minibatches_multiscale</span><span class="p">(</span><span class="n">X_list</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+        <span class="n">inputs_list</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">inputs_list</span><span class="o">+</span><span class="p">[</span><span class="n">targets</span><span class="p">]</span>
+        <span class="n">pre</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="n">val_func</span><span class="p">(</span><span class="o">*</span><span class="n">temp</span><span class="p">)</span>
+        <span class="n">val_loss</span> <span class="o">+=</span> <span class="n">loss</span>
+        <span class="n">val_batches</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">pre_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre</span><span class="p">)</span>
+
+    <span class="n">mean_val_loss</span> <span class="o">=</span> <span class="n">val_loss</span> <span class="o">/</span> <span class="n">val_batches</span>
+    <span class="k">return</span> <span class="n">pre_list</span><span class="p">,</span> <span class="n">mean_val_loss</span>
+
+
+<span class="k">def</span> <span class="nf">predict_multiscale</span><span class="p">(</span><span class="n">X_list</span><span class="p">,</span> <span class="n">pr_func</span><span class="p">):</span>
+    <span class="n">pre_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inputs_list</span> <span class="ow">in</span> <span class="n">iterate_minibatches_multiscale_feat</span><span class="p">(</span>
+            <span class="n">X_list</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+        <span class="n">pre</span> <span class="o">=</span> <span class="n">pr_func</span><span class="p">(</span><span class="o">*</span><span class="n">inputs_list</span><span class="p">)</span>
+        <span class="n">pre_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pre_list</span>
+
+
+<span class="c"># Save/load</span>
+<span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="o">*</span><span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">get_all_param_values</span><span class="p">(</span><span class="n">network</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">param_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="s">&#39;arr_%d&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">files</span><span class="p">))]</span>
+    <span class="n">lasagne</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">set_all_param_values</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">param_values</span><span class="p">)</span>
+
+
+<span class="c"># Get thresholds</span>
+<span class="k">def</span> <span class="nf">f1_one</span><span class="p">(</span><span class="n">y_target</span><span class="p">,</span> <span class="n">y_predicted</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    y_target, y_predicted:</span>
+<span class="sd">        1D binary array</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">f1_score</span><span class="p">(</span><span class="n">y_target</span><span class="p">,</span> <span class="n">y_predicted</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="s">&#39;binary&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">f1</span><span class="p">(</span><span class="n">Y_target</span><span class="p">,</span> <span class="n">Y_predicted</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Y_target, Y_predicted:</span>
+<span class="sd">        n x k 2D binary array, where n is the number of data and</span>
+<span class="sd">        k is the number of tags</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">f1_one</span><span class="p">(</span><span class="n">y_target</span><span class="p">,</span> <span class="n">y_predicted</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">y_target</span><span class="p">,</span> <span class="n">y_predicted</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Y_target</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Y_predicted</span><span class="o">.</span><span class="n">T</span><span class="p">)]</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scores</span>
+
+
+<span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">lower_b</span><span class="p">,</span> <span class="n">measure_func</span> <span class="o">=</span> <span class="n">arg</span>
+    <span class="n">pred_binary</span> <span class="o">=</span> <span class="p">((</span><span class="n">prediction</span><span class="o">-</span><span class="n">threshold</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">measures</span> <span class="o">=</span> <span class="n">measure_func</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">pred_binary</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">measures</span>
+
+
+<span class="k">def</span> <span class="nf">get_thresholds</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">search_range</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">measure_func</span><span class="o">=</span><span class="n">f1</span><span class="p">,</span>
+                   <span class="n">n_processes</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    pred: np.array</span>
+<span class="sd">        prediction from a model</span>
+<span class="sd">        n x k 2D array, where n is the number of data and</span>
+<span class="sd">        k is the number of tags</span>
+
+<span class="sd">    target: np.array</span>
+<span class="sd">        groundtruth</span>
+<span class="sd">        n x k 2D binary array, where n is the number of data and</span>
+<span class="sd">        k is the number of tags</span>
+
+<span class="sd">    search_range: tuple</span>
+<span class="sd">        the range for searching the thresholds</span>
+<span class="sd">        (a, b), where a is the lower bound and b is the upper bound</span>
+
+<span class="sd">    step_size: float</span>
+<span class="sd">        searching the threholds in (a, a+step_size, a+2step_size, ..., ...)</span>
+
+<span class="sd">    measure_func: function or str</span>
+<span class="sd">        function defined in the begining of this fild</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">lower_b</span><span class="p">,</span> <span class="n">upper_b</span> <span class="o">=</span> <span class="n">search_range</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">upper_b</span> <span class="o">&gt;</span> <span class="n">lower_b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">measure_func</span> <span class="o">==</span> <span class="s">&#39;f1&#39;</span><span class="p">:</span>
+        <span class="n">measure_func</span> <span class="o">=</span> <span class="n">f1</span>
+
+    <span class="n">n_tags</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">upper_b</span><span class="o">-</span><span class="n">lower_b</span>
+    <span class="n">n_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">diff</span><span class="o">/</span><span class="n">step_size</span><span class="p">))</span>
+
+    <span class="n">threshold_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">lower_b</span><span class="o">+</span><span class="n">ii</span><span class="o">*</span><span class="n">step_size</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_steps</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+    <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">threshold_list</span><span class="p">:</span>
+        <span class="n">arg_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">th</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">lower_b</span><span class="p">,</span> <span class="n">measure_func</span><span class="p">))</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">n_processes</span><span class="p">)</span>
+    <span class="n">all_measures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">get_measure</span><span class="p">,</span> <span class="n">arg_list</span><span class="p">))</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="c"># print(all_measures.shape)</span>
+
+    <span class="n">best_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">all_measures</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">best_thresholds</span> <span class="o">=</span> <span class="n">lower_b</span><span class="o">+</span><span class="n">best_idx_list</span><span class="o">*</span><span class="n">step_size</span>
+    <span class="n">best_measures</span> <span class="o">=</span> <span class="n">all_measures</span><span class="p">[</span><span class="n">best_idx_list</span><span class="p">,</span> <span class="p">[</span><span class="n">ii</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_tags</span><span class="p">)]]</span>
+    <span class="c"># print(n_tags, len(best_idx_list))</span>
+
+    <span class="k">return</span> <span class="n">best_thresholds</span><span class="p">,</span> <span class="n">best_measures</span>
+
+
+<span class="c"># Upscale array</span>
+<span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="n">array_list</span><span class="p">,</span> <span class="n">shift_size</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+    <span class="n">n_axes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="k">None</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="k">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_axes</span><span class="p">)]</span>
+    <span class="n">obj</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">shift_size</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="n">pad_width</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_axes</span><span class="p">)]</span>
+    <span class="n">pad_width</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shift_size</span><span class="p">)</span>
+
+    <span class="n">out_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">obj</span><span class="p">],</span> <span class="n">pad_width</span><span class="p">,</span> <span class="s">&#39;constant&#39;</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">array_list</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out_array_list</span>
+
+
+<span class="k">def</span> <span class="nf">upscale</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">input_list</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;naive&#39;</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">in_axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">out_axis</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    array: numpy.array</span>
+
+<span class="sd">    method: str</span>
+<span class="sd">        &#39;naive&#39; or &#39;patching&#39;</span>
+
+<span class="sd">    scale_factor: int</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;naive&#39;</span><span class="p">,</span> <span class="s">&#39;patching&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;naive&#39;</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">input_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">new_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">out_axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;patching&#39;</span><span class="p">:</span>
+        <span class="n">output_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">shift</span><span class="p">(</span><span class="n">input_list</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">in_axis</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                       <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">)]</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">output_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">out_axis</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">new_shape</span><span class="p">[</span><span class="n">out_axis</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_shape</span><span class="p">)</span>
+
+        <span class="n">new_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">new_shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_array</span>
+
+
+<span class="c"># Process tag list</span>
+<span class="k">def</span> <span class="nf">get_test_tag_indices</span><span class="p">(</span><span class="n">tag_tr_fp</span><span class="p">,</span> <span class="n">tag_te_fp</span><span class="p">,</span> <span class="n">tag_conv_fp</span><span class="p">):</span>
+    <span class="n">tag_te_list</span> <span class="o">=</span> <span class="n">read_lines</span><span class="p">(</span><span class="n">tag_te_fp</span><span class="p">)</span>
+    <span class="n">tag_conv_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">read_csv</span><span class="p">(</span><span class="n">tag_conv_fp</span><span class="p">))</span>
+
+    <span class="n">tag_tr_list</span> <span class="o">=</span> <span class="n">read_lines</span><span class="p">(</span><span class="n">tag_tr_fp</span><span class="p">)</span>
+
+    <span class="n">tag_idx_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">tag_tr_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">tag_conv_dict</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tag_te_list</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">tag_idx_list</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tensor3</span><span class="p">()</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jen-Yu Liu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

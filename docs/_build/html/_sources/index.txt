@@ -24,6 +24,9 @@ API Reference
     :maxdepth: 2
 
     modules/layers
+    modules/network_design
+    modules/measure
+    modules/utils
 
 
 Indices and tables

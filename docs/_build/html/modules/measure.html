@@ -1,0 +1,265 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clip2frame.measure &mdash; clip2frame 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="clip2frame.utils" href="utils.html" />
+    <link rel="prev" title="clip2frame.network_design" href="network_design.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="clip2frame.utils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="network_design.html" title="clip2frame.network_design"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-clip2frame.measure">
+<span id="clip2frame-measure"></span><h1><a class="reference internal" href="#module-clip2frame.measure" title="clip2frame.measure"><code class="xref py py-mod docutils literal"><span class="pre">clip2frame.measure</span></code></a><a class="headerlink" href="#module-clip2frame.measure" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.measure.mean_auc_y" title="clip2frame.measure.mean_auc_y"><code class="xref py py-obj docutils literal"><span class="pre">mean_auc_y</span></code></a>(Y_target,&nbsp;Y_score)</td>
+<td>along y-axis</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.measure.mean_auc_x" title="clip2frame.measure.mean_auc_x"><code class="xref py py-obj docutils literal"><span class="pre">mean_auc_x</span></code></a>(Y_target,&nbsp;Y_score)</td>
+<td>along x-axis</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.measure.map_y" title="clip2frame.measure.map_y"><code class="xref py py-obj docutils literal"><span class="pre">map_y</span></code></a>(Y_target,&nbsp;Y_score)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.measure.map_x" title="clip2frame.measure.map_x"><code class="xref py py-obj docutils literal"><span class="pre">map_x</span></code></a>(Y_target,&nbsp;Y_score)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.measure.f1_micro" title="clip2frame.measure.f1_micro"><code class="xref py py-obj docutils literal"><span class="pre">f1_micro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.measure.f1_macro" title="clip2frame.measure.f1_macro"><code class="xref py py-obj docutils literal"><span class="pre">f1_macro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.measure.precision_micro" title="clip2frame.measure.precision_micro"><code class="xref py py-obj docutils literal"><span class="pre">precision_micro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.measure.precision_macro" title="clip2frame.measure.precision_macro"><code class="xref py py-obj docutils literal"><span class="pre">precision_macro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.measure.recall_micro" title="clip2frame.measure.recall_micro"><code class="xref py py-obj docutils literal"><span class="pre">recall_micro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.measure.recall_macro" title="clip2frame.measure.recall_macro"><code class="xref py py-obj docutils literal"><span class="pre">recall_macro</span></code></a>(y_target,&nbsp;y_predicted)</td>
+<td>y_target: m x n 2D array. {0, 1}</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="details">
+<h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="clip2frame.measure.mean_auc_y">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">mean_auc_y</code><span class="sig-paren">(</span><em>Y_target</em>, <em>Y_score</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#mean_auc_y"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L49-L53"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.mean_auc_y" title="Permalink to this definition">¶</a></dt>
+<dd><p>along y-axis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.mean_auc_x">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">mean_auc_x</code><span class="sig-paren">(</span><em>Y_target</em>, <em>Y_score</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#mean_auc_x"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L56-L60"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.mean_auc_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>along x-axis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.map_y">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">map_y</code><span class="sig-paren">(</span><em>Y_target</em>, <em>Y_score</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#map_y"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L106-L108"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.map_y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.map_x">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">map_x</code><span class="sig-paren">(</span><em>Y_target</em>, <em>Y_score</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#map_x"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L102-L103"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.map_x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.f1_micro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">f1_micro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#f1_micro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L112-L125"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.f1_micro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.f1_macro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">f1_macro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#f1_macro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L128-L141"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.f1_macro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.precision_micro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">precision_micro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#precision_micro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L144-L157"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.precision_micro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.precision_macro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">precision_macro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#precision_macro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L160-L173"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.precision_macro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.recall_micro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">recall_micro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#recall_micro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L176-L189"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.recall_micro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.measure.recall_macro">
+<code class="descclassname">clip2frame.measure.</code><code class="descname">recall_macro</code><span class="sig-paren">(</span><em>y_target</em>, <em>y_predicted</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/measure.html#recall_macro"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/measure.py#L192-L205"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.measure.recall_macro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>y_target: m x n 2D array. {0, 1}</dt>
+<dd>real labels</dd>
+<dt>y_predicted: m x n 2D array {0, 1}</dt>
+<dd>prediction labels</dd>
+</dl>
+<p>m (y-axis): # of instances
+n (x-axis): # of classes</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">clip2frame.measure</span></code></a><ul>
+<li><a class="reference internal" href="#details">Details</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="network_design.html"
+                        title="previous chapter"><code class="docutils literal"><span class="pre">clip2frame.network_design</span></code></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="utils.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">clip2frame.utils</span></code></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/measure.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="clip2frame.utils"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="network_design.html" title="clip2frame.network_design"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jen-Yu Liu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

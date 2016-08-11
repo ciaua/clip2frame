@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clip2frame.network_design &mdash; clip2frame 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="clip2frame.measure" href="measure.html" />
+    <link rel="prev" title="clip2frame.layers" href="layers.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="measure.html" title="clip2frame.measure"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="layers.html" title="clip2frame.layers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-clip2frame.network_design">
+<span id="clip2frame-network-design"></span><h1><a class="reference internal" href="#module-clip2frame.network_design" title="clip2frame.network_design"><code class="xref py py-mod docutils literal"><span class="pre">clip2frame.network_design</span></code></a><a class="headerlink" href="#module-clip2frame.network_design" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.network_design.fcn_gaussian_multiscale" title="clip2frame.network_design.fcn_gaussian_multiscale"><code class="xref py py-obj docutils literal"><span class="pre">fcn_gaussian_multiscale</span></code></a>(input_var_list,&nbsp;...)</td>
+<td>early_conv_dict_list: list</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.network_design.fcn_fixedgaussian_multiscale" title="clip2frame.network_design.fcn_fixedgaussian_multiscale"><code class="xref py py-obj docutils literal"><span class="pre">fcn_fixedgaussian_multiscale</span></code></a>(input_var_list,&nbsp;...)</td>
+<td>early_conv_dict_list: list</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#clip2frame.network_design.fcn_multiscale" title="clip2frame.network_design.fcn_multiscale"><code class="xref py py-obj docutils literal"><span class="pre">fcn_multiscale</span></code></a>(input_var_list,&nbsp;...[,&nbsp;...])</td>
+<td>early_conv_dict_list: list</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="details">
+<h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="clip2frame.network_design.fcn_gaussian_multiscale">
+<code class="descclassname">clip2frame.network_design.</code><code class="descname">fcn_gaussian_multiscale</code><span class="sig-paren">(</span><em>input_var_list, early_conv_dict_list, late_conv_dict, dense_filter_size, scan_dict, final_pool_function=&lt;function max&gt;, input_size_list=[128], output_size=188, p_dropout=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/network_design.html#fcn_gaussian_multiscale"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/network_design.py#L118-L213"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.network_design.fcn_gaussian_multiscale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>early_conv_dict_list: list</dt>
+<dd>each element in the list is a dictionary containing the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>late_conv_dict: dict</dt>
+<dd>it contains the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>dense_filter_size: int</dt>
+<dd>the filter size of the final dense-like conv layer</dd>
+<dt>pool_filter_list: list</dt>
+<dd>each element is an integer</dd>
+<dt>pool_stride_list: list</dt>
+<dd>each element is int or None</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.network_design.fcn_fixedgaussian_multiscale">
+<code class="descclassname">clip2frame.network_design.</code><code class="descname">fcn_fixedgaussian_multiscale</code><span class="sig-paren">(</span><em>input_var_list, early_conv_dict_list, late_conv_dict, dense_filter_size, scan_dict, final_pool_function=&lt;function max&gt;, input_size_list=[128], output_size=188, p_dropout=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/network_design.html#fcn_fixedgaussian_multiscale"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/network_design.py#L216-L313"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.network_design.fcn_fixedgaussian_multiscale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>early_conv_dict_list: list</dt>
+<dd>each element in the list is a dictionary containing the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>late_conv_dict: dict</dt>
+<dd>it contains the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>dense_filter_size: int</dt>
+<dd>the filter size of the final dense-like conv layer</dd>
+<dt>pool_filter_list: list</dt>
+<dd>each element is an integer</dd>
+<dt>pool_stride_list: list</dt>
+<dd>each element is int or None</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="clip2frame.network_design.fcn_multiscale">
+<code class="descclassname">clip2frame.network_design.</code><code class="descname">fcn_multiscale</code><span class="sig-paren">(</span><em>input_var_list, early_conv_dict_list, late_conv_dict, dense_filter_size, final_pool_function=&lt;function max&gt;, input_size_list=[128], output_size=188, p_dropout=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/network_design.html#fcn_multiscale"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/network_design.py#L316-L390"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.network_design.fcn_multiscale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>early_conv_dict_list: list</dt>
+<dd>each element in the list is a dictionary containing the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>late_conv_dict: dict</dt>
+<dd>it contains the following keys:
+&#8216;conv_filter_list&#8217;, &#8216;pool_filter_list&#8217;, &#8216;pool_stride_list&#8217;</dd>
+<dt>dense_filter_size: int</dt>
+<dd>the filter size of the final dense-like conv layer</dd>
+<dt>pool_filter_list: list</dt>
+<dd>each element is an integer</dd>
+<dt>pool_stride_list: list</dt>
+<dd>each element is int or None</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">clip2frame.network_design</span></code></a><ul>
+<li><a class="reference internal" href="#details">Details</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="layers.html"
+                        title="previous chapter"><code class="docutils literal"><span class="pre">clip2frame.layers</span></code></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="measure.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">clip2frame.measure</span></code></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/network_design.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="measure.html" title="clip2frame.measure"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="layers.html" title="clip2frame.layers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jen-Yu Liu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

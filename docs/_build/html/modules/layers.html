@@ -25,6 +25,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="clip2frame 0.1.0 documentation" href="../index.html" />
+    <link rel="next" title="clip2frame.network_design" href="network_design.html" />
     <link rel="prev" title="data/" href="../misc/data.html" /> 
   </head>
   <body role="document">
@@ -37,6 +38,9 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="network_design.html" title="clip2frame.network_design"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../misc/data.html" title="data/"
              accesskey="P">previous</a> |</li>
@@ -58,78 +62,21 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#clip2frame.layers.GaussianScan1DLayer" title="clip2frame.layers.GaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">GaussianScan1DLayer</span></code></a>(incoming,&nbsp;filter_size[,&nbsp;...])</td>
-<td>1D Gaussian filter layer</td>
+<td>1D Adaptive Gaussian filter</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="clip2frame.layers.FixedGaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">FixedGaussianScan1DLayer</span></code></a>(incoming,&nbsp;...[,&nbsp;...])</td>
-<td>1D convolutional layer</td>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="clip2frame.layers.FixedGaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">FixedGaussianScan1DLayer</span></code></a>(incoming,&nbsp;filter_size)</td>
+<td>1D Fixed Gaussian filter</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="details">
 <h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="clip2frame.layers.conv_output_length">
-<code class="descclassname">clip2frame.layers.</code><code class="descname">conv_output_length</code><span class="sig-paren">(</span><em>input_length</em>, <em>filter_size</em>, <em>stride</em>, <em>pad=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#conv_output_length"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L43-L108"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.conv_output_length" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function to compute the output size of a convolution operation</p>
-<p>This function computes the length along a single axis, which corresponds
-to a 1D convolution. It can also be used for convolutions with higher
-dimensionalities by using it individually for each axis.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_length</strong> : int</p>
-<blockquote>
-<div><p>The size of the input.</p>
-</div></blockquote>
-<p><strong>filter_size</strong> : int</p>
-<blockquote>
-<div><p>The size of the filter.</p>
-</div></blockquote>
-<p><strong>stride</strong> : int</p>
-<blockquote>
-<div><p>The stride of the convolution operation.</p>
-</div></blockquote>
-<p><strong>pad</strong> : int, &#8216;full&#8217; or &#8216;same&#8217; (default: 0)</p>
-<blockquote>
-<div><p>By default, the convolution is only computed where the input and the
-filter fully overlap (a valid convolution). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
-yields an output that is smaller than the input by <code class="docutils literal"><span class="pre">filter_size</span> <span class="pre">-</span> <span class="pre">1</span></code>.
-The <cite>pad</cite> argument allows you to implicitly pad the input with zeros,
-extending the output size.</p>
-<p>A single integer results in symmetric zero-padding of the given size on
-both borders.</p>
-<p><code class="docutils literal"><span class="pre">'full'</span></code> pads with one less than the filter size on both sides. This
-is equivalent to computing the convolution wherever the input and the
-filter overlap by at least one position.</p>
-<p><code class="docutils literal"><span class="pre">'same'</span></code> pads with half the filter size on both sides (one less on
-the second side for an even filter size). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
-results in an output size equal to the input size.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
-<blockquote>
-<div><p>The output size corresponding to the given convolution parameters.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>RuntimeError</strong></p>
-<blockquote class="last">
-<div><p>When an invalid padding is specified, a <cite>RuntimeError</cite> is raised.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="class">
 <dt id="clip2frame.layers.GaussianScan1DLayer">
 <em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">GaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std=5.0</em>, <em>W_logstd=None</em>, <em>stride=1</em>, <em>pad=0</em>, <em>nonlinearity=None</em>, <em>convolution=&lt;function conv1d_mc0&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L611-L846"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
-<dd><p>1D Gaussian filter layer</p>
-<p>Performs a 1D convolution on its input and optionally adds a bias and
-applies an elementwise nonlinearity.</p>
+<dd><p>1D Adaptive Gaussian filter
+Gaussian filter is changing during the training</p>
+<p>Performs a 1D convolution on its input</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -257,232 +204,10 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
 
 <dl class="class">
 <dt id="clip2frame.layers.FixedGaussianScan1DLayer">
-<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">FixedGaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std</em>, <em>stride=1</em>, <em>pad=0</em>, <em>untie_biases=False</em>, <em>W=lasagne.init.GlorotUniform()</em>, <em>b=lasagne.init.Constant(0.)</em>, <em>nonlinearity=lasagne.nonlinearities.rectify</em>, <em>convolution=lasagne.theano_extensions.conv.conv1d_mc0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#FixedGaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L851-L1092"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
-<dd><p>1D convolutional layer
+<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">FixedGaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std=5.0</em>, <em>stride=1</em>, <em>pad=0</em>, <em>nonlinearity=None</em>, <em>convolution=&lt;function conv1d_mc0&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#FixedGaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L851-L889"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D Fixed Gaussian filter
 Gaussian filter is not changing during the training</p>
-<p>Performs a 1D convolution on its input and optionally adds a bias and
-applies an elementwise nonlinearity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>incoming</strong> : a <code class="xref py py-class docutils literal"><span class="pre">Layer</span></code> instance or a tuple</p>
-<blockquote>
-<div><p>The layer feeding into this layer, or the expected input shape. The
-output of this layer should be a 3D tensor, with shape
-<code class="docutils literal"><span class="pre">(batch_size,</span> <span class="pre">num_input_channels,</span> <span class="pre">input_length)</span></code>.</p>
-</div></blockquote>
-<p><strong>num_filters</strong> : int</p>
-<blockquote>
-<div><p>The number of learnable convolutional filters this layer has.</p>
-</div></blockquote>
-<p><strong>filter_size</strong> : int or iterable of int</p>
-<blockquote>
-<div><p>An integer or a 1-element tuple specifying the size of the filters.</p>
-</div></blockquote>
-<p><strong>stride</strong> : int or iterable of int</p>
-<blockquote>
-<div><p>An integer or a 1-element tuple specifying the stride of the
-convolution operation.</p>
-</div></blockquote>
-<p><strong>pad</strong> : int, iterable of int, &#8216;full&#8217;, &#8216;same&#8217; or &#8216;valid&#8217; (default: 0)</p>
-<blockquote>
-<div><p>By default, the convolution is only computed where the input and the
-filter fully overlap (a valid convolution). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
-yields an output that is smaller than the input by <code class="docutils literal"><span class="pre">filter_size</span> <span class="pre">-</span> <span class="pre">1</span></code>.
-The <cite>pad</cite> argument allows you to implicitly pad the input with zeros,
-extending the output size.</p>
-<p>An integer or a 1-element tuple results in symmetric zero-padding of
-the given size on both borders.</p>
-<p><code class="docutils literal"><span class="pre">'full'</span></code> pads with one less than the filter size on both sides. This
-is equivalent to computing the convolution wherever the input and the
-filter overlap by at least one position.</p>
-<p><code class="docutils literal"><span class="pre">'same'</span></code> pads with half the filter size (rounded down) on both sides.
-When <code class="docutils literal"><span class="pre">stride=1</span></code> this results in an output size equal to the input
-size. Even filter size is not supported.</p>
-<p><code class="docutils literal"><span class="pre">'valid'</span></code> is an alias for <code class="docutils literal"><span class="pre">0</span></code> (no padding / a valid convolution).</p>
-</div></blockquote>
-<p><strong>untie_biases</strong> : bool (default: False)</p>
-<blockquote>
-<div><p>If <code class="docutils literal"><span class="pre">False</span></code>, the layer will have a bias parameter for each channel,
-which is shared across all positions in this channel. As a result, the
-<cite>b</cite> attribute will be a vector (1D).</p>
-<p>If True, the layer will have separate bias parameters for each
-position in each channel. As a result, the <cite>b</cite> attribute will be a
-matrix (2D).</p>
-</div></blockquote>
-<p><strong>W</strong> : Theano shared variable, expression, numpy array or callable</p>
-<blockquote>
-<div><p>Initial value, expression or initializer for the weights.
-These should be a 3D tensor with shape
-<code class="docutils literal"><span class="pre">(num_filters,</span> <span class="pre">num_input_channels,</span> <span class="pre">filter_length)</span></code>.
-See <code class="xref py py-func docutils literal"><span class="pre">lasagne.utils.create_param()</span></code> for more information.</p>
-</div></blockquote>
-<p><strong>b</strong> : Theano shared variable, expression, numpy array, callable or <code class="docutils literal"><span class="pre">None</span></code></p>
-<blockquote>
-<div><p>Initial value, expression or initializer for the biases. If set to
-<code class="docutils literal"><span class="pre">None</span></code>, the layer will have no biases. Otherwise, biases should be
-a 1D array with shape <code class="docutils literal"><span class="pre">(num_filters,)</span></code> if <cite>untied_biases</cite> is set to
-<code class="docutils literal"><span class="pre">False</span></code>. If it is set to <code class="docutils literal"><span class="pre">True</span></code>, its shape should be
-<code class="docutils literal"><span class="pre">(num_filters,</span> <span class="pre">input_length)</span></code> instead.
-See <code class="xref py py-func docutils literal"><span class="pre">lasagne.utils.create_param()</span></code> for more information.</p>
-</div></blockquote>
-<p><strong>nonlinearity</strong> : callable or None</p>
-<blockquote>
-<div><p>The nonlinearity that is applied to the layer activations. If None
-is provided, the layer will be linear.</p>
-</div></blockquote>
-<p><strong>convolution</strong> : callable</p>
-<blockquote>
-<div><p>The convolution implementation to use. The
-<cite>lasagne.theano_extensions.conv</cite> module provides some alternative
-implementations for 1D convolutions, because the Theano API only
-features a 2D convolution implementation. Usually it should be fine
-to leave this at the default value.</p>
-</div></blockquote>
-<p><strong>**kwargs</strong></p>
-<blockquote class="last">
-<div><p>Any additional keyword arguments are passed to the <cite>Layer</cite> superclass.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Theano&#8217;s underlying convolution (<code class="xref py py-func docutils literal"><span class="pre">theano.tensor.nnet.conv.conv2d()</span></code>)
-only supports <code class="docutils literal"><span class="pre">pad=0</span></code> and <code class="docutils literal"><span class="pre">pad='full'</span></code>. This layer emulates other modes
-by cropping a full convolution or explicitly padding the input with zeros.</p>
-<p class="rubric">Attributes</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="3%" />
-<col width="97%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>W</td>
-<td>(Theano shared variable or expression) Variable or expression representing the filter weights.</td>
-</tr>
-<tr class="row-even"><td>b</td>
-<td>(Theano shared variable or expression) Variable or expression representing the biases.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="class">
-<dt id="clip2frame.layers.Conv2DXLayer">
-<em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">Conv2DXLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>num_filters</em>, <em>filter_size</em>, <em>stride=(1</em>, <em>1)</em>, <em>pad=0</em>, <em>untie_biases=False</em>, <em>W=lasagne.init.GlorotUniform()</em>, <em>b=lasagne.init.Constant(0.)</em>, <em>nonlinearity=lasagne.nonlinearities.rectify</em>, <em>convolution=theano.tensor.nnet.conv2d</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#Conv2DXLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L368-L608"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.Conv2DXLayer" title="Permalink to this definition">¶</a></dt>
-<dd><p>2D convolutional layer</p>
-<p>Performs a 2D convolution on its input and optionally adds a bias and
-applies an elementwise nonlinearity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>incoming</strong> : a <code class="xref py py-class docutils literal"><span class="pre">Layer</span></code> instance or a tuple</p>
-<blockquote>
-<div><p>The layer feeding into this layer, or the expected input shape. The
-output of this layer should be a 4D tensor, with shape
-<code class="docutils literal"><span class="pre">(batch_size,</span> <span class="pre">num_input_channels,</span> <span class="pre">input_rows,</span> <span class="pre">input_columns)</span></code>.</p>
-</div></blockquote>
-<p><strong>num_filters</strong> : int</p>
-<blockquote>
-<div><p>The number of learnable convolutional filters this layer has.</p>
-</div></blockquote>
-<p><strong>filter_size</strong> : int or iterable of int</p>
-<blockquote>
-<div><p>An integer or a 2-element tuple specifying the size of the filters.</p>
-</div></blockquote>
-<p><strong>stride</strong> : int or iterable of int</p>
-<blockquote>
-<div><p>An integer or a 2-element tuple specifying the stride of the
-convolution operation.</p>
-</div></blockquote>
-<p><strong>pad</strong> : int, iterable of int, &#8216;full&#8217;, &#8216;same&#8217; or &#8216;valid&#8217; (default: 0)</p>
-<blockquote>
-<div><p>By default, the convolution is only computed where the input and the
-filter fully overlap (a valid convolution). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
-yields an output that is smaller than the input by <code class="docutils literal"><span class="pre">filter_size</span> <span class="pre">-</span> <span class="pre">1</span></code>.
-The <cite>pad</cite> argument allows you to implicitly pad the input with zeros,
-extending the output size.</p>
-<p>A single integer results in symmetric zero-padding of the given size on
-all borders, a tuple of two integers allows different symmetric padding
-per dimension.</p>
-<p><code class="docutils literal"><span class="pre">'full'</span></code> pads with one less than the filter size on both sides. This
-is equivalent to computing the convolution wherever the input and the
-filter overlap by at least one position.</p>
-<p><code class="docutils literal"><span class="pre">'same'</span></code> pads with half the filter size (rounded down) on both sides.
-When <code class="docutils literal"><span class="pre">stride=1</span></code> this results in an output size equal to the input
-size. Even filter size is not supported.</p>
-<p><code class="docutils literal"><span class="pre">'strictsamex'</span></code> pads to the right of the third axis (x axis)
-to keep the same dim as input
-require stride=(1, 1)</p>
-<p><code class="docutils literal"><span class="pre">'valid'</span></code> is an alias for <code class="docutils literal"><span class="pre">0</span></code> (no padding / a valid convolution).</p>
-<p>Note that <code class="docutils literal"><span class="pre">'full'</span></code> and <code class="docutils literal"><span class="pre">'same'</span></code> can be faster than equivalent
-integer values due to optimizations by Theano.</p>
-</div></blockquote>
-<p><strong>untie_biases</strong> : bool (default: False)</p>
-<blockquote>
-<div><p>If <code class="docutils literal"><span class="pre">False</span></code>, the layer will have a bias parameter for each channel,
-which is shared across all positions in this channel. As a result, the
-<cite>b</cite> attribute will be a vector (1D).</p>
-<p>If True, the layer will have separate bias parameters for each
-position in each channel. As a result, the <cite>b</cite> attribute will be a
-3D tensor.</p>
-</div></blockquote>
-<p><strong>W</strong> : Theano shared variable, expression, numpy array or callable</p>
-<blockquote>
-<div><p>Initial value, expression or initializer for the weights.
-These should be a 4D tensor with shape
-<code class="docutils literal"><span class="pre">(num_filters,</span> <span class="pre">num_input_channels,</span> <span class="pre">filter_rows,</span> <span class="pre">filter_columns)</span></code>.
-See <code class="xref py py-func docutils literal"><span class="pre">lasagne.utils.create_param()</span></code> for more information.</p>
-</div></blockquote>
-<p><strong>b</strong> : Theano shared variable, expression, numpy array, callable or <code class="docutils literal"><span class="pre">None</span></code></p>
-<blockquote>
-<div><p>Initial value, expression or initializer for the biases. If set to
-<code class="docutils literal"><span class="pre">None</span></code>, the layer will have no biases. Otherwise, biases should be
-a 1D array with shape <code class="docutils literal"><span class="pre">(num_filters,)</span></code> if <cite>untied_biases</cite> is set to
-<code class="docutils literal"><span class="pre">False</span></code>. If it is set to <code class="docutils literal"><span class="pre">True</span></code>, its shape should be
-<code class="docutils literal"><span class="pre">(num_filters,</span> <span class="pre">output_rows,</span> <span class="pre">output_columns)</span></code> instead.
-See <code class="xref py py-func docutils literal"><span class="pre">lasagne.utils.create_param()</span></code> for more information.</p>
-</div></blockquote>
-<p><strong>nonlinearity</strong> : callable or None</p>
-<blockquote>
-<div><p>The nonlinearity that is applied to the layer activations. If None
-is provided, the layer will be linear.</p>
-</div></blockquote>
-<p><strong>convolution</strong> : callable</p>
-<blockquote>
-<div><p>The convolution implementation to use. Usually it should be fine to
-leave this at the default value.</p>
-</div></blockquote>
-<p><strong>**kwargs</strong></p>
-<blockquote class="last">
-<div><p>Any additional keyword arguments are passed to the <cite>Layer</cite> superclass.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Theano&#8217;s underlying convolution (<code class="xref py py-func docutils literal"><span class="pre">theano.tensor.nnet.conv.conv2d()</span></code>)
-only supports <code class="docutils literal"><span class="pre">pad=0</span></code> and <code class="docutils literal"><span class="pre">pad='full'</span></code>. This layer emulates other modes
-by cropping a full convolution or explicitly padding the input with zeros.</p>
-<p class="rubric">Attributes</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="3%" />
-<col width="97%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>W</td>
-<td>(Theano shared variable or expression) Variable or expression representing the filter weights.</td>
-</tr>
-<tr class="row-even"><td>b</td>
-<td>(Theano shared variable or expression) Variable or expression representing the biases.</td>
-</tr>
-</tbody>
-</table>
+<p>Performs a 1D convolution on its input</p>
 </dd></dl>
 
 </div>
@@ -505,6 +230,9 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="../misc/data.html"
                         title="previous chapter">data/</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="network_design.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">clip2frame.network_design</span></code></a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -535,6 +263,9 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="network_design.html" title="clip2frame.network_design"
+             >next</a> |</li>
         <li class="right" >
           <a href="../misc/data.html" title="data/"
              >previous</a> |</li>
