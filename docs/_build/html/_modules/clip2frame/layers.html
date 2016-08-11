@@ -1,0 +1,1188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clip2frame.layers &mdash; clip2frame 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="clip2frame 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clip2frame.layers</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="k">as</span> <span class="nn">T</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="k">import</span> <span class="n">pool</span>
+<span class="kn">from</span> <span class="nn">lasagne</span> <span class="k">import</span> <span class="n">init</span>
+<span class="kn">from</span> <span class="nn">lasagne</span> <span class="k">import</span> <span class="n">nonlinearities</span>
+<span class="kn">from</span> <span class="nn">lasagne</span> <span class="k">import</span> <span class="n">layers</span>
+<span class="kn">from</span> <span class="nn">lasagne.theano_extensions</span> <span class="k">import</span> <span class="n">padding</span>
+<span class="kn">from</span> <span class="nn">lasagne.utils</span> <span class="k">import</span> <span class="n">as_tuple</span>
+
+<span class="n">floatX</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span>
+
+
+<span class="c"># Duplicate of conv1d in lasagne.theano_extensions.conv</span>
+<span class="k">def</span> <span class="nf">conv1d_mc0</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">filter_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+               <span class="n">border_mode</span><span class="o">=</span><span class="s">&#39;valid&#39;</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    using conv2d with width == 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="n">input_shape_mc0</span> <span class="o">=</span> <span class="k">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># (b, c, i0) to (b, c, 1, i0)</span>
+        <span class="n">input_shape_mc0</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">filter_shape</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="n">filter_shape_mc0</span> <span class="o">=</span> <span class="k">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filter_shape_mc0</span> <span class="o">=</span> <span class="p">(</span><span class="n">filter_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">input_mc0</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">filters_mc0</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">conved</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">nnet</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
+        <span class="n">input_mc0</span><span class="p">,</span> <span class="n">filters_mc0</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape_mc0</span><span class="p">,</span>
+        <span class="n">filter_shape</span><span class="o">=</span><span class="n">filter_shape_mc0</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">subsample</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">border_mode</span><span class="o">=</span><span class="n">border_mode</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c"># drop the unused dimension</span>
+
+
+<span class="c"># modified from lasagne</span>
+<span class="k">def</span> <span class="nf">conv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to compute the output size of a convolution operation</span>
+
+<span class="sd">    This function computes the length along a single axis, which corresponds</span>
+<span class="sd">    to a 1D convolution. It can also be used for convolutions with higher</span>
+<span class="sd">    dimensionalities by using it individually for each axis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_length : int</span>
+<span class="sd">        The size of the input.</span>
+
+<span class="sd">    filter_size : int</span>
+<span class="sd">        The size of the filter.</span>
+
+<span class="sd">    stride : int</span>
+<span class="sd">        The stride of the convolution operation.</span>
+
+<span class="sd">    pad : int, &#39;full&#39; or &#39;same&#39; (default: 0)</span>
+<span class="sd">        By default, the convolution is only computed where the input and the</span>
+<span class="sd">        filter fully overlap (a valid convolution). When ``stride=1``, this</span>
+<span class="sd">        yields an output that is smaller than the input by ``filter_size - 1``.</span>
+<span class="sd">        The `pad` argument allows you to implicitly pad the input with zeros,</span>
+<span class="sd">        extending the output size.</span>
+
+<span class="sd">        A single integer results in symmetric zero-padding of the given size on</span>
+<span class="sd">        both borders.</span>
+
+<span class="sd">        ``&#39;full&#39;`` pads with one less than the filter size on both sides. This</span>
+<span class="sd">        is equivalent to computing the convolution wherever the input and the</span>
+<span class="sd">        filter overlap by at least one position.</span>
+
+<span class="sd">        ``&#39;same&#39;`` pads with half the filter size on both sides (one less on</span>
+<span class="sd">        the second side for an even filter size). When ``stride=1``, this</span>
+<span class="sd">        results in an output size equal to the input size.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        The output size corresponding to the given convolution parameters.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        When an invalid padding is specified, a `RuntimeError` is raised.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">input_length</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">None</span>
+    <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">-</span> <span class="n">filter_size</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;full&#39;</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">+</span> <span class="n">filter_size</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span>
+    <span class="k">elif</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pad</span> <span class="o">-</span> <span class="n">filter_size</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid pad: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad</span><span class="p">))</span>
+
+    <span class="c"># This is the integer arithmetic equivalent to</span>
+    <span class="c"># np.ceil(output_length / stride)</span>
+    <span class="n">output_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_length</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span>
+
+    <span class="k">return</span> <span class="n">output_length</span>
+
+
+<span class="c"># modified from lasagne</span>
+<span class="k">def</span> <span class="nf">pool_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">ignore_border</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the output length of a pooling operator</span>
+<span class="sd">    along a single dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_length : integer</span>
+<span class="sd">        The length of the input in the pooling dimension</span>
+<span class="sd">    pool_size : integer</span>
+<span class="sd">        The length of the pooling region</span>
+<span class="sd">    stride : integer</span>
+<span class="sd">        The stride between successive pooling regions</span>
+<span class="sd">    pad : integer</span>
+<span class="sd">        The number of elements to be added to the input on each side.</span>
+<span class="sd">    ignore_border: bool</span>
+<span class="sd">        If ``True``, partial pooling regions will be ignored.</span>
+<span class="sd">        Must be ``True`` if ``pad != 0``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output_length</span>
+<span class="sd">        * None if either input is None.</span>
+<span class="sd">        * Computed length of the pooling operator otherwise.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When ``ignore_border == True``, this is given by the number of full</span>
+<span class="sd">    pooling regions that fit in the padded input length,</span>
+<span class="sd">    divided by the stride (rounding down).</span>
+
+<span class="sd">    If ``ignore_border == False``, a single partial pooling region is</span>
+<span class="sd">    appended if at least one input element would be left uncovered otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">input_length</span> <span class="ow">is</span> <span class="k">None</span> <span class="ow">or</span> <span class="n">pool_size</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">None</span>
+
+    <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span>
+    <span class="k">elif</span> <span class="n">ignore_border</span><span class="p">:</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pad</span> <span class="o">-</span> <span class="n">pool_size</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">output_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_length</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span>
+
+    <span class="c"># output length calculation taken from:</span>
+    <span class="c"># https://github.com/Theano/Theano/blob/master/theano/tensor/signal/downsample.py</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">pad</span> <span class="o">==</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">stride</span> <span class="o">&gt;=</span> <span class="n">pool_size</span><span class="p">:</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_length</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">input_length</span> <span class="o">-</span> <span class="n">pool_size</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">output_length</span>
+
+
+<span class="c"># add &#39;strictsamex&#39; method for pad</span>
+<span class="k">class</span> <span class="nc">Pool2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    2D pooling layer</span>
+
+<span class="sd">    Performs 2D mean or max-pooling over the two trailing axes</span>
+<span class="sd">    of a 4D input tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming : a :class:`Layer` instance or tuple</span>
+<span class="sd">        The layer feeding into this layer, or the expected input shape.</span>
+
+<span class="sd">    pool_size : integer or iterable</span>
+<span class="sd">        The length of the pooling region in each dimension.  If an integer, it</span>
+<span class="sd">        is promoted to a square pooling region. If an iterable, it should have</span>
+<span class="sd">        two elements.</span>
+
+<span class="sd">    stride : integer, iterable or ``None``</span>
+<span class="sd">        The strides between sucessive pooling regions in each dimension.</span>
+<span class="sd">        If ``None`` then ``stride = pool_size``.</span>
+
+<span class="sd">    pad : integer or iterable</span>
+<span class="sd">        Number of elements to be added on each side of the input</span>
+<span class="sd">        in each dimension. Each value must be less than</span>
+<span class="sd">        the corresponding stride.</span>
+
+<span class="sd">    ignore_border : bool</span>
+<span class="sd">        If ``True``, partial pooling regions will be ignored.</span>
+<span class="sd">        Must be ``True`` if ``pad != (0, 0)``.</span>
+
+<span class="sd">    mode : {&#39;max&#39;, &#39;average_inc_pad&#39;, &#39;average_exc_pad&#39;}</span>
+<span class="sd">        Pooling mode: max-pooling or mean-pooling including/excluding zeros</span>
+<span class="sd">        from partially padded pooling regions. Default is &#39;max&#39;.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any additional keyword arguments are passed to the :class:`Layer`</span>
+<span class="sd">        superclass.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    MaxPool2DLayer : Shortcut for max pooling layer.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The value used to pad the input is chosen to be less than</span>
+<span class="sd">    the minimum of the input, so that the output of each pooling region</span>
+<span class="sd">    always corresponds to some element in the unpadded input region.</span>
+
+<span class="sd">    Using ``ignore_border=False`` prevents Theano from using cuDNN for the</span>
+<span class="sd">    operation, so it will fall back to a slower implementation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                 <span class="n">ignore_border</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pool2DXLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">pool_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">stride</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">pad</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span> <span class="o">=</span> <span class="n">ignore_border</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+    <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>  <span class="c"># copy / convert to mutable list</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="n">output_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool_output_length</span><span class="p">(</span>
+                <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">pad</span><span class="o">=</span><span class="s">&#39;strictsame&#39;</span><span class="p">,</span>
+                <span class="n">ignore_border</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">output_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool_output_length</span><span class="p">(</span>
+                <span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">ignore_border</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool_output_length</span><span class="p">(</span>
+                <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">pad</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">ignore_border</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">output_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool_output_length</span><span class="p">(</span>
+                <span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">pad</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">ignore_border</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_output_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">kk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">kk</span><span class="o">/</span><span class="mf">2.</span><span class="p">))</span>
+            <span class="c"># rr = kk-ll</span>
+            <span class="c"># pad = (ll, 0)</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ll</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+
+            <span class="n">length</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span> <span class="o">=</span> <span class="k">True</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">padding</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">batch_ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span>
+
+        <span class="n">pooled</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">pool_2d</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span>
+                              <span class="n">ds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span><span class="p">,</span>
+                              <span class="n">st</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                              <span class="n">ignore_border</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_border</span><span class="p">,</span>
+                              <span class="n">padding</span><span class="o">=</span><span class="n">pad</span><span class="p">,</span>
+                              <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
+                              <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="n">pooled</span> <span class="o">=</span> <span class="n">pooled</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">length</span> <span class="ow">or</span> <span class="k">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">pooled</span>
+
+
+<span class="c"># add &#39;strictsamex&#39; method for pad</span>
+<span class="k">class</span> <span class="nc">MaxPool2DXLayer</span><span class="p">(</span><span class="n">Pool2DXLayer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    2D max-pooling layer</span>
+
+<span class="sd">    Performs 2D max-pooling over the two trailing axes of a 4D input tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming : a :class:`Layer` instance or tuple</span>
+<span class="sd">        The layer feeding into this layer, or the expected input shape.</span>
+
+<span class="sd">    pool_size : integer or iterable</span>
+<span class="sd">        The length of the pooling region in each dimension.  If an integer, it</span>
+<span class="sd">        is promoted to a square pooling region. If an iterable, it should have</span>
+<span class="sd">        two elements.</span>
+
+<span class="sd">    stride : integer, iterable or ``None``</span>
+<span class="sd">        The strides between sucessive pooling regions in each dimension.</span>
+<span class="sd">        If ``None`` then ``stride = pool_size``.</span>
+
+<span class="sd">    pad : integer or iterable</span>
+<span class="sd">        Number of elements to be added on each side of the input</span>
+<span class="sd">        in each dimension. Each value must be less than</span>
+<span class="sd">        the corresponding stride.</span>
+
+<span class="sd">    ignore_border : bool</span>
+<span class="sd">        If ``True``, partial pooling regions will be ignored.</span>
+<span class="sd">        Must be ``True`` if ``pad != (0, 0)``.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any additional keyword arguments are passed to the :class:`Layer`</span>
+<span class="sd">        superclass.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The value used to pad the input is chosen to be less than</span>
+<span class="sd">    the minimum of the input, so that the output of each pooling region</span>
+<span class="sd">    always corresponds to some element in the unpadded input region.</span>
+
+<span class="sd">    Using ``ignore_border=False`` prevents Theano from using cuDNN for the</span>
+<span class="sd">    operation, so it will fall back to a slower implementation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                 <span class="n">ignore_border</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MaxPool2DXLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span>
+                                              <span class="n">pool_size</span><span class="p">,</span>
+                                              <span class="n">stride</span><span class="p">,</span>
+                                              <span class="n">pad</span><span class="p">,</span>
+                                              <span class="n">ignore_border</span><span class="p">,</span>
+                                              <span class="n">mode</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="c"># TODO: add reshape-based implementation to MaxPool*DLayer</span>
+<span class="c"># TODO: add MaxPool3DLayer</span>
+
+
+<span class="c"># add &#39;strictsamex&#39; method for pad</span>
+<span class="k">class</span> <span class="nc">Conv2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    lasagne.layers.Conv2DLayer(incoming, num_filters, filter_size,</span>
+<span class="sd">    stride=(1, 1), pad=0, untie_biases=False,</span>
+<span class="sd">    W=lasagne.init.GlorotUniform(), b=lasagne.init.Constant(0.),</span>
+<span class="sd">    nonlinearity=lasagne.nonlinearities.rectify,</span>
+<span class="sd">    convolution=theano.tensor.nnet.conv2d, **kwargs)</span>
+
+<span class="sd">    2D convolutional layer</span>
+
+<span class="sd">    Performs a 2D convolution on its input and optionally adds a bias and</span>
+<span class="sd">    applies an elementwise nonlinearity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming : a :class:`Layer` instance or a tuple</span>
+<span class="sd">        The layer feeding into this layer, or the expected input shape. The</span>
+<span class="sd">        output of this layer should be a 4D tensor, with shape</span>
+<span class="sd">        ``(batch_size, num_input_channels, input_rows, input_columns)``.</span>
+
+<span class="sd">    num_filters : int</span>
+<span class="sd">        The number of learnable convolutional filters this layer has.</span>
+
+<span class="sd">    filter_size : int or iterable of int</span>
+<span class="sd">        An integer or a 2-element tuple specifying the size of the filters.</span>
+
+<span class="sd">    stride : int or iterable of int</span>
+<span class="sd">        An integer or a 2-element tuple specifying the stride of the</span>
+<span class="sd">        convolution operation.</span>
+
+<span class="sd">    pad : int, iterable of int, &#39;full&#39;, &#39;same&#39; or &#39;valid&#39; (default: 0)</span>
+<span class="sd">        By default, the convolution is only computed where the input and the</span>
+<span class="sd">        filter fully overlap (a valid convolution). When ``stride=1``, this</span>
+<span class="sd">        yields an output that is smaller than the input by ``filter_size - 1``.</span>
+<span class="sd">        The `pad` argument allows you to implicitly pad the input with zeros,</span>
+<span class="sd">        extending the output size.</span>
+
+<span class="sd">        A single integer results in symmetric zero-padding of the given size on</span>
+<span class="sd">        all borders, a tuple of two integers allows different symmetric padding</span>
+<span class="sd">        per dimension.</span>
+
+<span class="sd">        ``&#39;full&#39;`` pads with one less than the filter size on both sides. This</span>
+<span class="sd">        is equivalent to computing the convolution wherever the input and the</span>
+<span class="sd">        filter overlap by at least one position.</span>
+
+<span class="sd">        ``&#39;same&#39;`` pads with half the filter size (rounded down) on both sides.</span>
+<span class="sd">        When ``stride=1`` this results in an output size equal to the input</span>
+<span class="sd">        size. Even filter size is not supported.</span>
+
+<span class="sd">        ``&#39;strictsamex&#39;`` pads to the right of the third axis (x axis)</span>
+<span class="sd">        to keep the same dim as input</span>
+<span class="sd">        require stride=(1, 1)</span>
+
+<span class="sd">        ``&#39;valid&#39;`` is an alias for ``0`` (no padding / a valid convolution).</span>
+
+<span class="sd">        Note that ``&#39;full&#39;`` and ``&#39;same&#39;`` can be faster than equivalent</span>
+<span class="sd">        integer values due to optimizations by Theano.</span>
+
+<span class="sd">    untie_biases : bool (default: False)</span>
+<span class="sd">        If ``False``, the layer will have a bias parameter for each channel,</span>
+<span class="sd">        which is shared across all positions in this channel. As a result, the</span>
+<span class="sd">        `b` attribute will be a vector (1D).</span>
+
+<span class="sd">        If True, the layer will have separate bias parameters for each</span>
+<span class="sd">        position in each channel. As a result, the `b` attribute will be a</span>
+<span class="sd">        3D tensor.</span>
+
+<span class="sd">    W : Theano shared variable, expression, numpy array or callable</span>
+<span class="sd">        Initial value, expression or initializer for the weights.</span>
+<span class="sd">        These should be a 4D tensor with shape</span>
+<span class="sd">        ``(num_filters, num_input_channels, filter_rows, filter_columns)``.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    b : Theano shared variable, expression, numpy array, callable or ``None``</span>
+<span class="sd">        Initial value, expression or initializer for the biases. If set to</span>
+<span class="sd">        ``None``, the layer will have no biases. Otherwise, biases should be</span>
+<span class="sd">        a 1D array with shape ``(num_filters,)`` if `untied_biases` is set to</span>
+<span class="sd">        ``False``. If it is set to ``True``, its shape should be</span>
+<span class="sd">        ``(num_filters, output_rows, output_columns)`` instead.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    nonlinearity : callable or None</span>
+<span class="sd">        The nonlinearity that is applied to the layer activations. If None</span>
+<span class="sd">        is provided, the layer will be linear.</span>
+
+<span class="sd">    convolution : callable</span>
+<span class="sd">        The convolution implementation to use. Usually it should be fine to</span>
+<span class="sd">        leave this at the default value.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any additional keyword arguments are passed to the `Layer` superclass.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    W : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the filter weights.</span>
+
+<span class="sd">    b : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the biases.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Theano&#39;s underlying convolution (:func:`theano.tensor.nnet.conv.conv2d`)</span>
+<span class="sd">    only supports ``pad=0`` and ``pad=&#39;full&#39;``. This layer emulates other modes</span>
+<span class="sd">    by cropping a full convolution or explicitly padding the input with zeros.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">untie_biases</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                 <span class="n">W</span><span class="o">=</span><span class="n">init</span><span class="o">.</span><span class="n">GlorotUniform</span><span class="p">(),</span> <span class="n">b</span><span class="o">=</span><span class="n">init</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="mf">0.</span><span class="p">),</span>
+                 <span class="n">nonlinearity</span><span class="o">=</span><span class="n">nonlinearities</span><span class="o">.</span><span class="n">rectify</span><span class="p">,</span>
+                 <span class="n">convolution</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">nnet</span><span class="o">.</span><span class="n">conv2d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Conv2DXLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nonlinearity</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearities</span><span class="o">.</span><span class="n">identity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearity</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_filters</span> <span class="o">=</span> <span class="n">num_filters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">filter_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">untie_biases</span> <span class="o">=</span> <span class="n">untie_biases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span> <span class="o">=</span> <span class="n">convolution</span>
+
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s">&#39;`same` padding requires odd filter size.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">stride</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">stride</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s">&#39;`strictsamex` padding requires stride=(1, 1) or 1&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">pad</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="s">&#39;same&#39;</span><span class="p">,</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">pad</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;W&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">untie_biases</span><span class="p">:</span>
+                <span class="n">biases_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span>
+                                <span class="n">output_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">biases_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_filters</span><span class="p">,)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">biases_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">,</span>
+                                    <span class="n">regularizable</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the shape of the weight matrix `W`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of int</span>
+<span class="sd">            The shape of the weight matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_input_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;strictsamex&#39;</span><span class="p">,</span> <span class="s">&#39;valid&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="n">output_rows</span> <span class="o">=</span> <span class="n">conv_output_length</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">output_columns</span> <span class="o">=</span> <span class="n">conv_output_length</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                            <span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">output_rows</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_output_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># The optional input_shape argument is for when get_output_for is</span>
+        <span class="c"># called directly with a different shape than self.input_shape.</span>
+        <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="c"># simulate same convolution by cropping a full convolution</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="c"># image_shape=input_shape,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="s">&#39;full&#39;</span><span class="p">)</span>
+            <span class="n">crop_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">crop_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">crop_x</span><span class="p">:</span><span class="o">-</span><span class="n">crop_x</span> <span class="ow">or</span> <span class="k">None</span><span class="p">,</span>
+                            <span class="n">crop_y</span><span class="p">:</span><span class="o">-</span><span class="n">crop_y</span> <span class="ow">or</span> <span class="k">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># no padding needed, or explicit padding of input needed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;full&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;full&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsamex&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">kk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+                <span class="n">rr</span> <span class="o">=</span> <span class="n">kk</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">ll</span> <span class="o">=</span> <span class="n">kk</span><span class="o">-</span><span class="n">rr</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ll</span><span class="p">,</span> <span class="n">rr</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+            <span class="k">if</span> <span class="n">pad</span> <span class="o">!=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]:</span>
+                <span class="nb">input</span> <span class="o">=</span> <span class="n">padding</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">batch_ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="k">None</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="k">None</span> <span class="k">else</span>
+                               <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="k">None</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="k">None</span> <span class="k">else</span>
+                               <span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="c"># image_shape=input_shape,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="n">border_mode</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">untie_biases</span><span class="p">:</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.GaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">GaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    GaussianScan1DLayer(incoming, filter_size, init_std,</span>
+<span class="sd">    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),</span>
+<span class="sd">    b=lasagne.init.Constant(0.), nonlinearity=lasagne.nonlinearities.rectify,</span>
+<span class="sd">    convolution=lasagne.theano_extensions.conv.conv1d_mc0, **kwargs)</span>
+
+<span class="sd">    1D convolutional layer</span>
+
+<span class="sd">    Performs a 1D convolution on its input and optionally adds a bias and</span>
+<span class="sd">    applies an elementwise nonlinearity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming : a :class:`Layer` instance or a tuple</span>
+<span class="sd">        The layer feeding into this layer, or the expected input shape. The</span>
+<span class="sd">        output of this layer should be a 3D tensor, with shape</span>
+<span class="sd">        ``(batch_size, num_input_channels, input_length)``.</span>
+
+<span class="sd">    num_filters : int</span>
+<span class="sd">        The number of learnable convolutional filters this layer has.</span>
+
+<span class="sd">    filter_size : int or iterable of int</span>
+<span class="sd">        An integer or a 1-element tuple specifying the size of the filters.</span>
+
+<span class="sd">    stride : int or iterable of int</span>
+<span class="sd">        An integer or a 1-element tuple specifying the stride of the</span>
+<span class="sd">        convolution operation.</span>
+
+<span class="sd">    pad : int, iterable of int, &#39;full&#39;, &#39;same&#39; or &#39;valid&#39; (default: 0)</span>
+<span class="sd">        By default, the convolution is only computed where the input and the</span>
+<span class="sd">        filter fully overlap (a valid convolution). When ``stride=1``, this</span>
+<span class="sd">        yields an output that is smaller than the input by ``filter_size - 1``.</span>
+<span class="sd">        The `pad` argument allows you to implicitly pad the input with zeros,</span>
+<span class="sd">        extending the output size.</span>
+
+<span class="sd">        An integer or a 1-element tuple results in symmetric zero-padding of</span>
+<span class="sd">        the given size on both borders.</span>
+
+<span class="sd">        ``&#39;full&#39;`` pads with one less than the filter size on both sides. This</span>
+<span class="sd">        is equivalent to computing the convolution wherever the input and the</span>
+<span class="sd">        filter overlap by at least one position.</span>
+
+<span class="sd">        ``&#39;same&#39;`` pads with half the filter size (rounded down) on both sides.</span>
+<span class="sd">        When ``stride=1`` this results in an output size equal to the input</span>
+<span class="sd">        size. Even filter size is not supported.</span>
+
+<span class="sd">        ``&#39;valid&#39;`` is an alias for ``0`` (no padding / a valid convolution).</span>
+
+<span class="sd">    untie_biases : bool (default: False)</span>
+<span class="sd">        If ``False``, the layer will have a bias parameter for each channel,</span>
+<span class="sd">        which is shared across all positions in this channel. As a result, the</span>
+<span class="sd">        `b` attribute will be a vector (1D).</span>
+
+<span class="sd">        If True, the layer will have separate bias parameters for each</span>
+<span class="sd">        position in each channel. As a result, the `b` attribute will be a</span>
+<span class="sd">        matrix (2D).</span>
+
+<span class="sd">    W : Theano shared variable, expression, numpy array or callable</span>
+<span class="sd">        Initial value, expression or initializer for the weights.</span>
+<span class="sd">        These should be a 3D tensor with shape</span>
+<span class="sd">        ``(num_filters, num_input_channels, filter_length)``.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    b : Theano shared variable, expression, numpy array, callable or ``None``</span>
+<span class="sd">        Initial value, expression or initializer for the biases. If set to</span>
+<span class="sd">        ``None``, the layer will have no biases. Otherwise, biases should be</span>
+<span class="sd">        a 1D array with shape ``(num_filters,)`` if `untied_biases` is set to</span>
+<span class="sd">        ``False``. If it is set to ``True``, its shape should be</span>
+<span class="sd">        ``(num_filters, input_length)`` instead.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    nonlinearity : callable or None</span>
+<span class="sd">        The nonlinearity that is applied to the layer activations. If None</span>
+<span class="sd">        is provided, the layer will be linear.</span>
+
+<span class="sd">    convolution : callable</span>
+<span class="sd">        The convolution implementation to use. The</span>
+<span class="sd">        `lasagne.theano_extensions.conv` module provides some alternative</span>
+<span class="sd">        implementations for 1D convolutions, because the Theano API only</span>
+<span class="sd">        features a 2D convolution implementation. Usually it should be fine</span>
+<span class="sd">        to leave this at the default value.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any additional keyword arguments are passed to the `Layer` superclass.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    W : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the filter weights.</span>
+
+<span class="sd">    b : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the biases.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Theano&#39;s underlying convolution (:func:`theano.tensor.nnet.conv.conv2d`)</span>
+<span class="sd">    only supports ``pad=0`` and ``pad=&#39;full&#39;``. This layer emulates other modes</span>
+<span class="sd">    by cropping a full convolution or explicitly padding the input with zeros.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span>
+                 <span class="n">init_std</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">W_logstd</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">nonlinearity</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">convolution</span><span class="o">=</span><span class="n">conv1d_mc0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GaussianScan1DLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># convolution = conv1d_gpucorrmm_mc0</span>
+        <span class="c"># convolution = conv.conv1d_mc0</span>
+        <span class="c"># convolution = T.nnet.conv2d</span>
+        <span class="k">if</span> <span class="n">nonlinearity</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearities</span><span class="o">.</span><span class="n">identity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearity</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">filter_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span> <span class="o">=</span> <span class="n">convolution</span>
+
+        <span class="c"># if self.filter_size[0] % 2 == 0:</span>
+        <span class="c">#     raise NotImplementedError(</span>
+        <span class="c">#         &#39;GaussianConv1dLayer requires odd filter size.&#39;)</span>
+
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="k">elif</span> <span class="n">pad</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="s">&#39;same&#39;</span><span class="p">,</span> <span class="s">&#39;strictsame&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">pad</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">W_logstd</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">init_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">floatX</span><span class="p">)</span>
+            <span class="n">W_logstd</span> <span class="o">=</span> <span class="n">init</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">init_std</span><span class="p">))</span>
+        <span class="c"># print(W_std)</span>
+        <span class="c"># W_std = init.Constant(init_std),</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># self.num_filters = self.num_input_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W_logstd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">W_logstd</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,),</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s">&quot;W_logstd&quot;</span><span class="p">,</span>
+                                       <span class="n">regularizable</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_gaussian_filter</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GaussianScan1DLayer.get_W_shape"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.GaussianScan1DLayer.get_W_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the shape of the weight matrix `W`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of int</span>
+<span class="sd">            The shape of the weight matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+    <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,)</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="n">conv_output_length</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">output_length</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">make_gaussian_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">W_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">()</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">k_low</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">k_high</span> <span class="o">=</span> <span class="n">k_low</span><span class="o">+</span><span class="n">k</span>
+
+        <span class="n">W_std</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_logstd</span><span class="p">)</span>
+        <span class="n">std_array</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">W_std</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k_low</span><span class="p">,</span> <span class="n">k_high</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+
+        <span class="n">p1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">2.</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">floatX</span><span class="p">)</span>
+        <span class="n">gf</span> <span class="o">=</span> <span class="p">(</span><span class="n">p1</span><span class="o">/</span><span class="n">std_array</span><span class="p">)</span><span class="o">*</span><span class="n">T</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">p2</span><span class="o">*</span><span class="p">(</span><span class="n">std_array</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+        <span class="c"># gf = gf.astype(theano.config.floatX)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">W_shape</span><span class="p">)</span>
+        <span class="n">rg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">rg</span><span class="p">,</span> <span class="n">rg</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+
+        <span class="n">gf</span> <span class="o">=</span> <span class="n">gf</span><span class="o">*</span><span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">gf</span>
+
+    <span class="k">def</span> <span class="nf">get_output_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># the optional input_shape argument is for when get_output_for is</span>
+        <span class="c"># called directly with a different shape than self.input_shape.</span>
+        <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="c"># simulate same convolution by cropping a full convolution</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="s">&#39;full&#39;</span><span class="p">)</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">crop</span><span class="p">:</span><span class="o">-</span><span class="n">crop</span> <span class="ow">or</span> <span class="k">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># no padding needed, or explicit padding of input needed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;full&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;full&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">kk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+                <span class="n">rr</span> <span class="o">=</span> <span class="n">kk</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">ll</span> <span class="o">=</span> <span class="n">kk</span><span class="o">-</span><span class="n">rr</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">rr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">pad</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="nb">input</span> <span class="o">=</span> <span class="n">padding</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">[</span><span class="n">pad</span><span class="p">],</span> <span class="n">batch_ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="k">None</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="k">None</span> <span class="k">else</span>
+                               <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="n">border_mode</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span></div>
+
+<span class="c"># The following classes are for my experiments where 5D input is needed</span>
+
+
+<div class="viewcode-block" id="FixedGaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.FixedGaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">FixedGaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FixedGaussianScan1DLayer(incoming, filter_size, init_std,</span>
+<span class="sd">    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),</span>
+<span class="sd">    b=lasagne.init.Constant(0.), nonlinearity=lasagne.nonlinearities.rectify,</span>
+<span class="sd">    convolution=lasagne.theano_extensions.conv.conv1d_mc0, **kwargs)</span>
+
+<span class="sd">    1D convolutional layer</span>
+<span class="sd">    Gaussian filter is not changing during the training</span>
+
+<span class="sd">    Performs a 1D convolution on its input and optionally adds a bias and</span>
+<span class="sd">    applies an elementwise nonlinearity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming : a :class:`Layer` instance or a tuple</span>
+<span class="sd">        The layer feeding into this layer, or the expected input shape. The</span>
+<span class="sd">        output of this layer should be a 3D tensor, with shape</span>
+<span class="sd">        ``(batch_size, num_input_channels, input_length)``.</span>
+
+<span class="sd">    num_filters : int</span>
+<span class="sd">        The number of learnable convolutional filters this layer has.</span>
+
+<span class="sd">    filter_size : int or iterable of int</span>
+<span class="sd">        An integer or a 1-element tuple specifying the size of the filters.</span>
+
+<span class="sd">    stride : int or iterable of int</span>
+<span class="sd">        An integer or a 1-element tuple specifying the stride of the</span>
+<span class="sd">        convolution operation.</span>
+
+<span class="sd">    pad : int, iterable of int, &#39;full&#39;, &#39;same&#39; or &#39;valid&#39; (default: 0)</span>
+<span class="sd">        By default, the convolution is only computed where the input and the</span>
+<span class="sd">        filter fully overlap (a valid convolution). When ``stride=1``, this</span>
+<span class="sd">        yields an output that is smaller than the input by ``filter_size - 1``.</span>
+<span class="sd">        The `pad` argument allows you to implicitly pad the input with zeros,</span>
+<span class="sd">        extending the output size.</span>
+
+<span class="sd">        An integer or a 1-element tuple results in symmetric zero-padding of</span>
+<span class="sd">        the given size on both borders.</span>
+
+<span class="sd">        ``&#39;full&#39;`` pads with one less than the filter size on both sides. This</span>
+<span class="sd">        is equivalent to computing the convolution wherever the input and the</span>
+<span class="sd">        filter overlap by at least one position.</span>
+
+<span class="sd">        ``&#39;same&#39;`` pads with half the filter size (rounded down) on both sides.</span>
+<span class="sd">        When ``stride=1`` this results in an output size equal to the input</span>
+<span class="sd">        size. Even filter size is not supported.</span>
+
+<span class="sd">        ``&#39;valid&#39;`` is an alias for ``0`` (no padding / a valid convolution).</span>
+
+<span class="sd">    untie_biases : bool (default: False)</span>
+<span class="sd">        If ``False``, the layer will have a bias parameter for each channel,</span>
+<span class="sd">        which is shared across all positions in this channel. As a result, the</span>
+<span class="sd">        `b` attribute will be a vector (1D).</span>
+
+<span class="sd">        If True, the layer will have separate bias parameters for each</span>
+<span class="sd">        position in each channel. As a result, the `b` attribute will be a</span>
+<span class="sd">        matrix (2D).</span>
+
+<span class="sd">    W : Theano shared variable, expression, numpy array or callable</span>
+<span class="sd">        Initial value, expression or initializer for the weights.</span>
+<span class="sd">        These should be a 3D tensor with shape</span>
+<span class="sd">        ``(num_filters, num_input_channels, filter_length)``.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    b : Theano shared variable, expression, numpy array, callable or ``None``</span>
+<span class="sd">        Initial value, expression or initializer for the biases. If set to</span>
+<span class="sd">        ``None``, the layer will have no biases. Otherwise, biases should be</span>
+<span class="sd">        a 1D array with shape ``(num_filters,)`` if `untied_biases` is set to</span>
+<span class="sd">        ``False``. If it is set to ``True``, its shape should be</span>
+<span class="sd">        ``(num_filters, input_length)`` instead.</span>
+<span class="sd">        See :func:`lasagne.utils.create_param` for more information.</span>
+
+<span class="sd">    nonlinearity : callable or None</span>
+<span class="sd">        The nonlinearity that is applied to the layer activations. If None</span>
+<span class="sd">        is provided, the layer will be linear.</span>
+
+<span class="sd">    convolution : callable</span>
+<span class="sd">        The convolution implementation to use. The</span>
+<span class="sd">        `lasagne.theano_extensions.conv` module provides some alternative</span>
+<span class="sd">        implementations for 1D convolutions, because the Theano API only</span>
+<span class="sd">        features a 2D convolution implementation. Usually it should be fine</span>
+<span class="sd">        to leave this at the default value.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any additional keyword arguments are passed to the `Layer` superclass.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    W : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the filter weights.</span>
+
+<span class="sd">    b : Theano shared variable or expression</span>
+<span class="sd">        Variable or expression representing the biases.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Theano&#39;s underlying convolution (:func:`theano.tensor.nnet.conv.conv2d`)</span>
+<span class="sd">    only supports ``pad=0`` and ``pad=&#39;full&#39;``. This layer emulates other modes</span>
+<span class="sd">    by cropping a full convolution or explicitly padding the input with zeros.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">init_std</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">nonlinearity</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">convolution</span><span class="o">=</span><span class="n">conv1d_mc0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FixedGaussianScan1DLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># convolution = conv1d_gpucorrmm_mc0</span>
+        <span class="c"># convolution = conv.conv1d_mc0</span>
+        <span class="c"># convolution = T.nnet.conv2d</span>
+        <span class="k">if</span> <span class="n">nonlinearity</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearities</span><span class="o">.</span><span class="n">identity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span> <span class="o">=</span> <span class="n">nonlinearity</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">filter_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span> <span class="o">=</span> <span class="n">convolution</span>
+
+        <span class="c"># if self.filter_size[0] % 2 == 0:</span>
+        <span class="c">#     raise NotImplementedError(</span>
+        <span class="c">#         &#39;GaussianConv1dLayer requires odd filter size.&#39;)</span>
+
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="k">elif</span> <span class="n">pad</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="s">&#39;same&#39;</span><span class="p">,</span> <span class="s">&#39;strictsame&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">pad</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">as_tuple</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">init_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">floatX</span><span class="p">)</span>
+        <span class="n">W_logstd</span> <span class="o">=</span> <span class="n">init</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">init_std</span><span class="p">))</span>
+        <span class="c"># print(W_std)</span>
+        <span class="c"># W_std = init.Constant(init_std),</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># self.num_filters = self.num_input_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W_logstd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">W_logstd</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,),</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s">&quot;W_logstd&quot;</span><span class="p">,</span>
+                                       <span class="n">regularizable</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                                       <span class="n">trainable</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_gaussian_filter</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_W_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the shape of the weight matrix `W`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of int</span>
+<span class="sd">            The shape of the weight matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_output_shape_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,)</span>
+            <span class="n">output_length</span> <span class="o">=</span> <span class="n">conv_output_length</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">output_length</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">make_gaussian_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">W_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">()</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">k_low</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">k_high</span> <span class="o">=</span> <span class="n">k_low</span><span class="o">+</span><span class="n">k</span>
+
+        <span class="n">W_std</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_logstd</span><span class="p">)</span>
+        <span class="n">std_array</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">W_std</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k_low</span><span class="p">,</span> <span class="n">k_high</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+
+        <span class="n">p1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">2.</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">floatX</span><span class="p">)</span>
+        <span class="n">gf</span> <span class="o">=</span> <span class="p">(</span><span class="n">p1</span><span class="o">/</span><span class="n">std_array</span><span class="p">)</span><span class="o">*</span><span class="n">T</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">p2</span><span class="o">*</span><span class="p">(</span><span class="n">std_array</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+        <span class="c"># gf = gf.astype(theano.config.floatX)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">W_shape</span><span class="p">)</span>
+        <span class="n">rg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_input_channels</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">rg</span><span class="p">,</span> <span class="n">rg</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">floatX</span><span class="p">)</span>
+
+        <span class="n">gf</span> <span class="o">=</span> <span class="n">gf</span><span class="o">*</span><span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">gf</span>
+
+    <span class="k">def</span> <span class="nf">get_output_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># the optional input_shape argument is for when get_output_for is</span>
+        <span class="c"># called directly with a different shape than self.input_shape.</span>
+        <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="c"># simulate same convolution by cropping a full convolution</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="s">&#39;full&#39;</span><span class="p">)</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="n">conved</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">crop</span><span class="p">:</span><span class="o">-</span><span class="n">crop</span> <span class="ow">or</span> <span class="k">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># no padding needed, or explicit padding of input needed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;full&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;full&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;same&#39;</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">==</span> <span class="s">&#39;strictsame&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">kk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+                <span class="n">rr</span> <span class="o">=</span> <span class="n">kk</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">ll</span> <span class="o">=</span> <span class="n">kk</span><span class="o">-</span><span class="n">rr</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">rr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">border_mode</span> <span class="o">=</span> <span class="s">&#39;valid&#39;</span>
+                <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">pad</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="nb">input</span> <span class="o">=</span> <span class="n">padding</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">[</span><span class="n">pad</span><span class="p">],</span> <span class="n">batch_ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="k">None</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="k">None</span> <span class="k">else</span>
+                               <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">pad</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">conved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+                                      <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                      <span class="n">filter_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_W_shape</span><span class="p">(),</span>
+                                      <span class="n">border_mode</span><span class="o">=</span><span class="n">border_mode</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">clip2frame 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jen-Yu Liu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>
