@@ -18,6 +18,7 @@
 #
 # import os
 import sys
+import clip2frame
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
@@ -361,7 +362,6 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         import inspect
         import os
-        import clip2frame
         fn = inspect.getsourcefile(obj)
         fn = os.path.relpath(fn, start=os.path.dirname(clip2frame.__file__))
         source, lineno = inspect.getsourcelines(obj)
