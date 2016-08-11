@@ -56,7 +56,7 @@
 <tr class="row-odd"><td><a class="reference internal" href="layers.html#clip2frame.layers.GaussianScan1DLayer" title="clip2frame.layers.GaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">GaussianScan1DLayer</span></code></a>(incoming,&nbsp;filter_size,&nbsp;...)</td>
 <td>1D convolutional layer</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="layers.html#clip2frame.layers.FixedGaussianScan1DLayer" title="clip2frame.layers.FixedGaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">FixedGaussianScan1DLayer</span></code></a>(incoming,&nbsp;...[,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#clip2frame.layers.FixedGaussianScan1DLayer" title="clip2frame.layers.FixedGaussianScan1DLayer"><code class="xref py py-obj docutils literal"><span class="pre">FixedGaussianScan1DLayer</span></code></a>(incoming,&nbsp;...[,&nbsp;...])</td>
 <td>1D convolutional layer</td>
 </tr>
 </tbody>
@@ -169,33 +169,6 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
 </tr>
 <tr class="row-even"><td>b</td>
 <td>(Theano shared variable or expression) Variable or expression representing the biases.</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">add_param</span></code>(spec,&nbsp;shape[,&nbsp;name])</td>
-<td>Register and possibly initialize a parameter tensor for the layer.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="layers.html#clip2frame.layers.GaussianScan1DLayer.get_W_shape" title="clip2frame.layers.GaussianScan1DLayer.get_W_shape"><code class="xref py py-obj docutils literal"><span class="pre">get_W_shape</span></code></a>()</td>
-<td>Get the shape of the weight matrix <cite>W</cite>.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_output_for</span></code>(input[,&nbsp;input_shape])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_output_shape_for</span></code>(input_shape)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_params</span></code>(**tags)</td>
-<td>Returns a list of Theano shared variables that parameterize the layer.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">make_gaussian_filter</span></code>()</td>
-<td></td>
 </tr>
 </tbody>
 </table>
@@ -328,33 +301,6 @@ by cropping a full convolution or explicitly padding the input with zeros.</p>
 </tr>
 <tr class="row-even"><td>b</td>
 <td>(Theano shared variable or expression) Variable or expression representing the biases.</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">add_param</span></code>(spec,&nbsp;shape[,&nbsp;name])</td>
-<td>Register and possibly initialize a parameter tensor for the layer.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_W_shape</span></code>()</td>
-<td>Get the shape of the weight matrix <cite>W</cite>.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_output_for</span></code>(input[,&nbsp;input_shape])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_output_shape_for</span></code>(input_shape)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_params</span></code>(**tags)</td>
-<td>Returns a list of Theano shared variables that parameterize the layer.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">make_gaussian_filter</span></code>()</td>
-<td></td>
 </tr>
 </tbody>
 </table>
