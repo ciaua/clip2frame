@@ -90,7 +90,7 @@
 
 
 <span class="c"># modified from lasagne</span>
-<span class="k">def</span> <span class="nf">conv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="conv_output_length"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.conv_output_length">[docs]</a><span class="k">def</span> <span class="nf">conv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to compute the output size of a convolution operation</span>
 
 <span class="sd">    This function computes the length along a single axis, which corresponds</span>
@@ -155,7 +155,7 @@
     <span class="c"># np.ceil(output_length / stride)</span>
     <span class="n">output_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_length</span> <span class="o">+</span> <span class="n">stride</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span>
 
-    <span class="k">return</span> <span class="n">output_length</span>
+    <span class="k">return</span> <span class="n">output_length</span></div>
 
 
 <span class="c"># modified from lasagne</span>

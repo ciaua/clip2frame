@@ -67,6 +67,63 @@
 </table>
 <div class="section" id="details">
 <h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="clip2frame.layers.conv_output_length">
+<code class="descclassname">clip2frame.layers.</code><code class="descname">conv_output_length</code><span class="sig-paren">(</span><em>input_length</em>, <em>filter_size</em>, <em>stride</em>, <em>pad=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#conv_output_length"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L43-L108"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.conv_output_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to compute the output size of a convolution operation</p>
+<p>This function computes the length along a single axis, which corresponds
+to a 1D convolution. It can also be used for convolutions with higher
+dimensionalities by using it individually for each axis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_length</strong> : int</p>
+<blockquote>
+<div><p>The size of the input.</p>
+</div></blockquote>
+<p><strong>filter_size</strong> : int</p>
+<blockquote>
+<div><p>The size of the filter.</p>
+</div></blockquote>
+<p><strong>stride</strong> : int</p>
+<blockquote>
+<div><p>The stride of the convolution operation.</p>
+</div></blockquote>
+<p><strong>pad</strong> : int, &#8216;full&#8217; or &#8216;same&#8217; (default: 0)</p>
+<blockquote>
+<div><p>By default, the convolution is only computed where the input and the
+filter fully overlap (a valid convolution). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
+yields an output that is smaller than the input by <code class="docutils literal"><span class="pre">filter_size</span> <span class="pre">-</span> <span class="pre">1</span></code>.
+The <cite>pad</cite> argument allows you to implicitly pad the input with zeros,
+extending the output size.</p>
+<p>A single integer results in symmetric zero-padding of the given size on
+both borders.</p>
+<p><code class="docutils literal"><span class="pre">'full'</span></code> pads with one less than the filter size on both sides. This
+is equivalent to computing the convolution wherever the input and the
+filter overlap by at least one position.</p>
+<p><code class="docutils literal"><span class="pre">'same'</span></code> pads with half the filter size on both sides (one less on
+the second side for an even filter size). When <code class="docutils literal"><span class="pre">stride=1</span></code>, this
+results in an output size equal to the input size.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
+<blockquote>
+<div><p>The output size corresponding to the given convolution parameters.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>RuntimeError</strong></p>
+<blockquote class="last">
+<div><p>When an invalid padding is specified, a <cite>RuntimeError</cite> is raised.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="clip2frame.layers.GaussianScan1DLayer">
 <em class="property">class </em><code class="descclassname">clip2frame.layers.</code><code class="descname">GaussianScan1DLayer</code><span class="sig-paren">(</span><em>incoming</em>, <em>filter_size</em>, <em>init_std=5.0</em>, <em>W_logstd=None</em>, <em>stride=1</em>, <em>pad=0</em>, <em>nonlinearity=None</em>, <em>convolution=&lt;function conv1d_mc0&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clip2frame/layers.html#GaussianScan1DLayer"><span class="viewcode-link">[source]</span></a><a class="reference external" href="https://github.com/clip2frame/clip2frame/blob/v0.1.0/lasagne/layers.py#L611-L846"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clip2frame.layers.GaussianScan1DLayer" title="Permalink to this definition">¶</a></dt>
