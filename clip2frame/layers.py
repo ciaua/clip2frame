@@ -609,10 +609,10 @@ class Conv2DXLayer(layers.Layer):
 
 
 class GaussianScan1DLayer(layers.Layer):
-    """ 1D Gaussian filter layer
+    """ 1D Adaptive Gaussian filter
+    Gaussian filter is changing during the training
 
-    Performs a 1D convolution on its input and optionally adds a bias and
-    applies an elementwise nonlinearity.
+    Performs a 1D convolution on its input
 
     Parameters
     ----------
@@ -848,115 +848,17 @@ class GaussianScan1DLayer(layers.Layer):
 # The following classes are for my experiments where 5D input is needed
 
 
-class FixedGaussianScan1DLayer(layers.Layer):
-    """
-    FixedGaussianScan1DLayer(incoming, filter_size, init_std,
-    stride=1, pad=0, untie_biases=False, W=lasagne.init.GlorotUniform(),
-    b=lasagne.init.Constant(0.), nonlinearity=lasagne.nonlinearities.rectify,
-    convolution=lasagne.theano_extensions.conv.conv1d_mc0, **kwargs)
-
-    1D convolutional layer
+class FixedGaussianScan1DLayer(GaussianScan1DLayer):
+    """ 1D Fixed Gaussian filter
     Gaussian filter is not changing during the training
 
-    Performs a 1D convolution on its input and optionally adds a bias and
-    applies an elementwise nonlinearity.
-
-    Parameters
-    ----------
-    incoming : a :class:`Layer` instance or a tuple
-        The layer feeding into this layer, or the expected input shape. The
-        output of this layer should be a 3D tensor, with shape
-        ``(batch_size, num_input_channels, input_length)``.
-
-    num_filters : int
-        The number of learnable convolutional filters this layer has.
-
-    filter_size : int or iterable of int
-        An integer or a 1-element tuple specifying the size of the filters.
-
-    stride : int or iterable of int
-        An integer or a 1-element tuple specifying the stride of the
-        convolution operation.
-
-    pad : int, iterable of int, 'full', 'same' or 'valid' (default: 0)
-        By default, the convolution is only computed where the input and the
-        filter fully overlap (a valid convolution). When ``stride=1``, this
-        yields an output that is smaller than the input by ``filter_size - 1``.
-        The `pad` argument allows you to implicitly pad the input with zeros,
-        extending the output size.
-
-        An integer or a 1-element tuple results in symmetric zero-padding of
-        the given size on both borders.
-
-        ``'full'`` pads with one less than the filter size on both sides. This
-        is equivalent to computing the convolution wherever the input and the
-        filter overlap by at least one position.
-
-        ``'same'`` pads with half the filter size (rounded down) on both sides.
-        When ``stride=1`` this results in an output size equal to the input
-        size. Even filter size is not supported.
-
-        ``'valid'`` is an alias for ``0`` (no padding / a valid convolution).
-
-    untie_biases : bool (default: False)
-        If ``False``, the layer will have a bias parameter for each channel,
-        which is shared across all positions in this channel. As a result, the
-        `b` attribute will be a vector (1D).
-
-        If True, the layer will have separate bias parameters for each
-        position in each channel. As a result, the `b` attribute will be a
-        matrix (2D).
-
-    W : Theano shared variable, expression, numpy array or callable
-        Initial value, expression or initializer for the weights.
-        These should be a 3D tensor with shape
-        ``(num_filters, num_input_channels, filter_length)``.
-        See :func:`lasagne.utils.create_param` for more information.
-
-    b : Theano shared variable, expression, numpy array, callable or ``None``
-        Initial value, expression or initializer for the biases. If set to
-        ``None``, the layer will have no biases. Otherwise, biases should be
-        a 1D array with shape ``(num_filters,)`` if `untied_biases` is set to
-        ``False``. If it is set to ``True``, its shape should be
-        ``(num_filters, input_length)`` instead.
-        See :func:`lasagne.utils.create_param` for more information.
-
-    nonlinearity : callable or None
-        The nonlinearity that is applied to the layer activations. If None
-        is provided, the layer will be linear.
-
-    convolution : callable
-        The convolution implementation to use. The
-        `lasagne.theano_extensions.conv` module provides some alternative
-        implementations for 1D convolutions, because the Theano API only
-        features a 2D convolution implementation. Usually it should be fine
-        to leave this at the default value.
-
-    **kwargs
-        Any additional keyword arguments are passed to the `Layer` superclass.
-
-    Attributes
-    ----------
-    W : Theano shared variable or expression
-        Variable or expression representing the filter weights.
-
-    b : Theano shared variable or expression
-        Variable or expression representing the biases.
-
-    Notes
-    -----
-    Theano's underlying convolution (:func:`theano.tensor.nnet.conv.conv2d`)
-    only supports ``pad=0`` and ``pad='full'``. This layer emulates other modes
-    by cropping a full convolution or explicitly padding the input with zeros.
+    Performs a 1D convolution on its input
     """
     def __init__(self, incoming, filter_size, init_std=5.,
                  stride=1, pad=0,
                  nonlinearity=None,
                  convolution=conv1d_mc0, **kwargs):
         super(FixedGaussianScan1DLayer, self).__init__(incoming, **kwargs)
-        # convolution = conv1d_gpucorrmm_mc0
-        # convolution = conv.conv1d_mc0
-        # convolution = T.nnet.conv2d
         if nonlinearity is None:
             self.nonlinearity = nonlinearities.identity
         else:
@@ -965,10 +867,6 @@ class FixedGaussianScan1DLayer(layers.Layer):
         self.filter_size = as_tuple(filter_size, 1)
         self.stride = as_tuple(stride, 1)
         self.convolution = convolution
-
-        # if self.filter_size[0] % 2 == 0:
-        #     raise NotImplementedError(
-        #         'GaussianConv1dLayer requires odd filter size.')
 
         if pad == 'valid':
             self.pad = (0,)
@@ -989,104 +887,3 @@ class FixedGaussianScan1DLayer(layers.Layer):
                                        regularizable=False,
                                        trainable=False)
         self.W = self.make_gaussian_filter()
-
-    def get_W_shape(self):
-        """Get the shape of the weight matrix `W`.
-
-        Returns
-        -------
-        tuple of int
-            The shape of the weight matrix.
-        """
-        return (self.num_input_channels, self.num_input_channels,
-                self.filter_size[0])
-
-    def get_output_shape_for(self, input_shape):
-        if self.pad == 'strictsame':
-            output_length = input_shape[2]
-        else:
-            pad = self.pad if isinstance(self.pad, tuple) else (self.pad,)
-            output_length = conv_output_length(input_shape[2],
-                                               self.filter_size[0],
-                                               self.stride[0],
-                                               pad[0])
-
-        return (input_shape[0], self.num_input_channels, output_length)
-
-    def make_gaussian_filter(self):
-        W_shape = self.get_W_shape()
-        k = self.filter_size[0]
-        k_low = int(np.floor(-(k-1)/2))
-        k_high = k_low+k
-
-        W_std = T.exp(self.W_logstd)
-        std_array = T.tile(
-            W_std.dimshuffle('x', 0, 'x'),
-            (self.num_input_channels, 1, k)
-        )
-
-        x = np.arange(k_low, k_high).reshape((1, 1, -1))
-        x = T.tile(
-            x, (self.num_input_channels, self.num_input_channels, 1)
-        ).astype(floatX)
-
-        p1 = (1./(np.sqrt(2.*np.pi))).astype(floatX)
-        p2 = np.asarray(2., dtype=floatX)
-        gf = (p1/std_array)*T.exp(-x**2/(p2*(std_array**2)))
-        # gf = gf.astype(theano.config.floatX)
-
-        mask = np.zeros(W_shape)
-        rg = np.arange(self.num_input_channels)
-        mask[rg, rg, :] = 1
-        mask = mask.astype(floatX)
-
-        gf = gf*mask
-
-        return gf
-
-    def get_output_for(self, input, input_shape=None, **kwargs):
-        # the optional input_shape argument is for when get_output_for is
-        # called directly with a different shape than self.input_shape.
-        if input_shape is None:
-            input_shape = self.input_shape
-
-        if self.stride == (1,) and self.pad == 'same':
-            # simulate same convolution by cropping a full convolution
-            conved = self.convolution(input, self.W, subsample=self.stride,
-                                      input_shape=input_shape,
-                                      filter_shape=self.get_W_shape(),
-                                      border_mode='full')
-            crop = self.filter_size[0] // 2
-            conved = conved[:, :, crop:-crop or None]
-        else:
-            # no padding needed, or explicit padding of input needed
-            if self.pad == 'full':
-                border_mode = 'full'
-                pad = (0, 0)
-            elif self.pad == 'same':
-                border_mode = 'valid'
-                pad = (self.filter_size[0] // 2,
-                       (self.filter_size[0] - 1) // 2)
-            elif self.pad == 'strictsame':
-                self.stride = (1,)
-                border_mode = 'valid'
-                kk = self.filter_size[0]-1
-                rr = kk // 2
-                ll = kk-rr
-                pad = (ll, rr)
-            else:
-                border_mode = 'valid'
-                pad = (self.pad[0], self.pad[0])
-            if pad != (0, 0):
-                input = padding.pad(input, [pad], batch_ndim=2)
-                input_shape = (input_shape[0], input_shape[1],
-                               None if input_shape[2] is None else
-                               input_shape[2] + pad[0] + pad[1])
-            conved = self.convolution(input, self.W, subsample=self.stride,
-                                      input_shape=input_shape,
-                                      filter_shape=self.get_W_shape(),
-                                      border_mode=border_mode)
-
-        activation = conved
-
-        return self.nonlinearity(activation)
