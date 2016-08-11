@@ -17,6 +17,13 @@ Contents:
 
    misc/dirs_in_scripts
 
+API Reference
+-------------
+
+.. toctree::
+    :maxdepth: 2
+
+    modules/layers
 
 
 Indices and tables
