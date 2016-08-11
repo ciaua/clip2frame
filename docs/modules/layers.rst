@@ -16,4 +16,5 @@ Details
     :members:
 
 .. autoclass:: FixedGaussianScan1DLayer
+.. autoclass:: Conv2DXLayer
 

@@ -415,7 +415,7 @@
 
 
 <span class="c"># add &#39;strictsamex&#39; method for pad</span>
-<span class="k">class</span> <span class="nc">Conv2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<div class="viewcode-block" id="Conv2DXLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.Conv2DXLayer">[docs]</a><span class="k">class</span> <span class="nc">Conv2DXLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    lasagne.layers.Conv2DLayer(incoming, num_filters, filter_size,</span>
 <span class="sd">    stride=(1, 1), pad=0, untie_biases=False,</span>
@@ -655,7 +655,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">activation</span> <span class="o">=</span> <span class="n">conved</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="GaussianScan1DLayer"><a class="viewcode-back" href="../../modules/layers.html#clip2frame.layers.GaussianScan1DLayer">[docs]</a><span class="k">class</span> <span class="nc">GaussianScan1DLayer</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
