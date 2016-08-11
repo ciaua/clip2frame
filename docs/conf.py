@@ -358,6 +358,7 @@ def linkcode_resolve(domain, info):
         # numpy:
         # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
         obj = sys.modules[info['module']]
+        print(obj)
         for part in info['fullname'].split('.'):
             obj = getattr(obj, part)
         import inspect

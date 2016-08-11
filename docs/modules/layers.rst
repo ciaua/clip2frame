@@ -11,7 +11,6 @@
 Details
 -------
 
-.. autofunction:: conv_output_length
 .. autoclass:: GaussianScan1DLayer
     :members:
 
