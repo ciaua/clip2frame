@@ -56,7 +56,7 @@ if __name__ == '__main__':
             data_dir, scale_list
         )
 
-    network, input_var, lr_var, train_func, val_func, pr_func = \
+    network, input_var_list, lr_var, train_func, val_func, pr_func = \
         utils.make_network_multiscale(
             network_type, loss_function, lr, n_sources,
             network_options, make_pr_func=True
