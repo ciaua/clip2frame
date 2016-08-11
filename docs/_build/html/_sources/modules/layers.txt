@@ -10,6 +10,8 @@ Layers
     GaussianScan1DLayer
     FixedGaussianScan1DLayer
 
+.. currentmodule:: clip2frame.layers
+
 .. autoclass:: GaussianScan1DLayer
     :members:
 
