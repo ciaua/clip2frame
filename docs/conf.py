@@ -367,7 +367,7 @@ def linkcode_resolve(domain, info):
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
 
-    print(find_source)
+    print(find_source())
     if domain != 'py' or not info['module']:
         return None
     try:
