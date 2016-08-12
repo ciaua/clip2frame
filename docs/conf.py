@@ -373,6 +373,8 @@ def linkcode_resolve(domain, info):
         filename = 'clip2frame/%s#L%d-L%d' % find_source()
     except Exception:
         filename = info['module'].replace('.', '/') + '.py'
+    finally:
+        filename = 'asdf'
     tag = 'master'
     return "https://github.com/ciaua/clip2frame/blob/%s/%s" % (tag, filename)
 
