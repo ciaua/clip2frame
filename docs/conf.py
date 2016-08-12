@@ -375,7 +375,7 @@ def linkcode_resolve(domain, info):
         filename = info['module'].replace('.', '/') + '.py'
     tag = 'master'
     # return "https://github.com/ciaua/clip2frame/blob/%s/%s" % (tag, filename)
-    return "aa"
+    return "https://aa"
 
 
 # fool rtd into thinking a GPU is available, so all modules are importable
