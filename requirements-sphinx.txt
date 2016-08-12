@@ -1,4 +1,4 @@
 -r requirements.txt
 mock
 numpydoc
-Sphinx==1.4.5
+Sphinx==1.2.3
