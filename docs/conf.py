@@ -367,14 +367,13 @@ def linkcode_resolve(domain, info):
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
 
+    print(find_source)
     if domain != 'py' or not info['module']:
         return None
     try:
         filename = 'clip2frame/%s#L%d-L%d' % find_source()
     except Exception:
         filename = info['module'].replace('.', '/') + '.py'
-    finally:
-        filename = 'asdf'
     tag = 'master'
     return "https://github.com/ciaua/clip2frame/blob/%s/%s" % (tag, filename)
 
