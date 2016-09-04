@@ -11,7 +11,8 @@ from lasagne.utils import as_tuple
 floatX = theano.config.floatX
 
 
-# Duplicate of conv1d in lasagne.theano_extensions.conv
+# Duplicate of conv1d in lasagne.theano_extensions.conv.
+# It is copied just in case it is changed in the future
 def conv1d_mc0(input, filters, input_shape=None, filter_shape=None,
                border_mode='valid', subsample=(1,)):
     """
@@ -39,7 +40,7 @@ def conv1d_mc0(input, filters, input_shape=None, filter_shape=None,
     return conved[:, :, 0, :]  # drop the unused dimension
 
 
-# modified from lasagne
+# modified from lasagne. Add 'strictsamex' for pad.
 def conv_output_length(input_length, filter_size, stride, pad=0):
     """Helper function to compute the output size of a convolution operation
 
@@ -360,9 +361,6 @@ class MaxPool2DXLayer(Pool2DXLayer):
                                               mode='max',
                                               **kwargs)
 
-# TODO: add reshape-based implementation to MaxPool*DLayer
-# TODO: add MaxPool3DLayer
-
 
 # add 'strictsamex' method for pad
 class Conv2DXLayer(layers.Layer):
@@ -610,7 +608,12 @@ class Conv2DXLayer(layers.Layer):
 
 class GaussianScan1DLayer(layers.Layer):
     """ 1D Adaptive Gaussian filter
-    Gaussian filter is changing during the training
+    Gaussian filters that scan through the third dimension
+    It is implemented with convolution.
+
+    Each element in the channel axis has its own standard deviation (\sigma)
+    for Gaussian.
+    Gaussian filter is adjusting its \sigma during training.
 
     Performs a 1D convolution on its input
 
@@ -621,11 +624,12 @@ class GaussianScan1DLayer(layers.Layer):
         output of this layer should be a 3D tensor, with shape
         ``(batch_size, num_input_channels, input_length)``.
 
-    num_filters : int
-        The number of learnable convolutional filters this layer has.
-
     filter_size : int or iterable of int
         An integer or a 1-element tuple specifying the size of the filters.
+        This is the width of the filters that accomodate the Gaussian filters
+
+    init_std : float
+        The initial \sigma for the Gaussian filters
 
     stride : int or iterable of int
         An integer or a 1-element tuple specifying the stride of the
@@ -651,32 +655,14 @@ class GaussianScan1DLayer(layers.Layer):
 
         ``'valid'`` is an alias for ``0`` (no padding / a valid convolution).
 
-    untie_biases : bool (default: False)
-        If ``False``, the layer will have a bias parameter for each channel,
-        which is shared across all positions in this channel. As a result, the
-        `b` attribute will be a vector (1D).
-
-        If True, the layer will have separate bias parameters for each
-        position in each channel. As a result, the `b` attribute will be a
-        matrix (2D).
-
-    W : Theano shared variable, expression, numpy array or callable
+    W_logstd : Theano shared variable, expression, numpy array or callable
         Initial value, expression or initializer for the weights.
-        These should be a 3D tensor with shape
-        ``(num_filters, num_input_channels, filter_length)``.
-        See :func:`lasagne.utils.create_param` for more information.
+        These should be a 1D tensor with shape
+        ``(num_input_channels, )``.
 
-    b : Theano shared variable, expression, numpy array, callable or ``None``
-        Initial value, expression or initializer for the biases. If set to
-        ``None``, the layer will have no biases. Otherwise, biases should be
-        a 1D array with shape ``(num_filters,)`` if `untied_biases` is set to
-        ``False``. If it is set to ``True``, its shape should be
-        ``(num_filters, input_length)`` instead.
-        See :func:`lasagne.utils.create_param` for more information.
+        Note:
+            The std is provided in log-scale, log(std).
 
-    nonlinearity : callable or None
-        The nonlinearity that is applied to the layer activations. If None
-        is provided, the layer will be linear.
 
     convolution : callable
         The convolution implementation to use. The
@@ -693,14 +679,6 @@ class GaussianScan1DLayer(layers.Layer):
     W : Theano shared variable or expression
         Variable or expression representing the filter weights.
 
-    b : Theano shared variable or expression
-        Variable or expression representing the biases.
-
-    Notes
-    -----
-    Theano's underlying convolution (:func:`theano.tensor.nnet.conv.conv2d`)
-    only supports ``pad=0`` and ``pad='full'``. This layer emulates other modes
-    by cropping a full convolution or explicitly padding the input with zeros.
     """
     def __init__(self, incoming, filter_size,
                  init_std=5., W_logstd=None,
@@ -760,10 +738,9 @@ class GaussianScan1DLayer(layers.Layer):
             output_length = input_shape[2]
         else:
             pad = self.pad if isinstance(self.pad, tuple) else (self.pad,)
-            output_length = conv_output_length(input_shape[2],
-                                               self.filter_size[0],
-                                               self.stride[0],
-                                               pad[0])
+            output_length = conv_output_length(
+                input_shape[2],
+                self.filter_size[0], self.stride[0], pad[0])
 
         return (input_shape[0], self.num_input_channels, output_length)
 
@@ -844,8 +821,6 @@ class GaussianScan1DLayer(layers.Layer):
         activation = conved
 
         return self.nonlinearity(activation)
-
-# The following classes are for my experiments where 5D input is needed
 
 
 class FixedGaussianScan1DLayer(GaussianScan1DLayer):

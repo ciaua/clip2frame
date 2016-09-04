@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import clip2frame
 
@@ -10,5 +10,5 @@ setup(name='clip2frame',
       author='Jen-Yu Liu',
       author_email='ciaua@citi.sinica.edu.tw',
       license='ISC',
-      packages=['clip2frame'],
+      packages=find_packages(),
       )
