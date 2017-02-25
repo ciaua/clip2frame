@@ -1,0 +1,10 @@
+README.rst
+setup.py
+clip2frame/__init__.py
+clip2frame/layers.py
+clip2frame/measure.py
+clip2frame/utils.py
+clip2frame.egg-info/PKG-INFO
+clip2frame.egg-info/SOURCES.txt
+clip2frame.egg-info/dependency_links.txt
+clip2frame.egg-info/top_level.txt

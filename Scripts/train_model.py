@@ -20,11 +20,13 @@ if __name__ == '__main__':
     n_epochs = 10
     batch_size = 1  # we use 10 for real data
     scale_list = [
-        "scale0",
-        "scale1",
-        "scale2",
+        "logmelspec10000.16000_512_512_128.0.standard",
+        "logmelspec10000.16000_1024_512_128.0.standard",
+        "logmelspec10000.16000_2048_512_128.0.standard",
+        "logmelspec10000.16000_4096_512_128.0.standard",
+        "logmelspec10000.16000_8192_512_128.0.standard",
+        "logmelspec10000.16000_16384_512_128.0.standard",
     ]
-    n_sources = len(scale_list)
 
     # Loading data
     print("Loading data...")
@@ -34,9 +36,11 @@ if __name__ == '__main__':
         )
 
     # Building Network
-    network, input_var_list = build_func(mean_std_list)
+    print("Building network...")
+    num_scales = len(scale_list)
+    network, input_var_list, _, _ = build_func(num_scales)
 
-    # Compute loss
+    # Computing loss
     target_var = T.matrix('targets')
     lr_var = theano.shared(np.array(lr, dtype=floatX))
     output_var = layers.get_output(network)

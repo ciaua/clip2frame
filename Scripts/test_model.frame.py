@@ -3,24 +3,26 @@ from clip2frame import utils, measure
 import numpy as np
 import theano
 import theano.tensor as T
-from lasagne.layers import get_all_layers
 from lasagne import layers
+import network_structure as ns
 
 
 if __name__ == '__main__':
     # Test Options
-    frame_layer_type = 'gaussian'  # 'pre-gaussian'
+    build_func = ns.build_fcn_gaussian_multiscale
+
+    frame_layer_type = 'gaussian'  # 'gaussian' or 'no-gaussian'
+
     test_measure_type_list = ['precision_micro', 'recall_micro', 'f1_micro']
 
     # test_measure_type_list = ['precision_micro', 'precision_macro',
     #                           'recall_micro', 'recall_macro',
     #                           'f1_micro', 'f1_macro']
 
-    upscale_method = 'naive'  # 'patching'
-    threshold_source = 'MedleyDB'  # 'MagnaTagATune'
+    upscale_method = 'naive'  # 'naive' or 'patching'
+    threshold_source = 'MedleyDB'  # 'MedleyDB' or 'MagnaTagATune'
 
     # Files and directories
-    base_tr_dir = '../data/data.magnatagatune'
     base_te_dir = '../data/data.medleydb'
 
     model_dir = '../data/models'
@@ -33,9 +35,16 @@ if __name__ == '__main__':
         '../data/data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
 
     # Default setting
-    scale_list = ['logmelspec10000.16000_{}_512_128.0.raw'.format(win_size)
-                  for win_size in [512, 1024, 2048, 4096, 8192, 16384]]
-    n_scales = len(scale_list)
+    upscale_factor = 16
+    scale_list = [
+        "logmelspec10000.16000_512_512_128.0.raw",
+        "logmelspec10000.16000_1024_512_128.0.raw",
+        "logmelspec10000.16000_2048_512_128.0.raw",
+        "logmelspec10000.16000_4096_512_128.0.raw",
+        "logmelspec10000.16000_8192_512_128.0.raw",
+        "logmelspec10000.16000_16384_512_128.0.raw",
+    ]
+    num_scales = len(scale_list)
 
     feat_dir_list = [os.path.join(base_te_dir, 'sample_features', scale)
                      for scale in scale_list]
@@ -47,57 +56,34 @@ if __name__ == '__main__':
     tag_idx_list = utils.get_test_tag_indices(tag_tr_fp, tag_te_fp, tag_conv_fp)
 
     # Standardizer dir
-    std_fp_list = [os.path.join(standardizer_dir, 'scaler.{}.pkl'.format(
-        scale.replace('.raw', '')))
-        for scale in scale_list]
+    std_fp_list = [os.path.join(standardizer_dir,
+                                scale.replace('.raw', ''),
+                                'scaler.pkl')
+                   for scale in scale_list]
     std_list = [utils.unpickle(std_fp) for std_fp in std_fp_list]
 
-    # Network options
-    network_type = 'fcn_gaussian_multiscale'
-    n_early_conv = 2
-    early_pool_size = 4
-    network_options = {
-        'early_conv_dict_list': [
-            {'conv_filter_list': [(32, 8) for ii in range(n_early_conv)],
-             'pool_filter_list': [early_pool_size
-                                  for ii in range(n_early_conv)],
-             'pool_stride_list': [None for ii in range(n_early_conv)]}
-            for ii in range(n_scales)
-        ],
-        'late_conv_dict': {
-            'conv_filter_list': [(512, 1), (512, 1)],
-            'pool_filter_list': [None, None],
-            'pool_stride_list': [None, None]
-        },
-        'dense_filter_size': 1,
-        'scan_dict': {
-            'scan_filter_list': [256],
-            'scan_std_list': [256/early_pool_size**n_early_conv],
-            'scan_stride_list': [1],
-        },
-        'final_pool_function': T.mean,  # T.max
-        'input_size_list': [128 for nn in range(n_scales)],
-        'output_size': 188,
-        'p_dropout': 0.5
-    }
-    network, input_var_list, pr_func = utils.make_network_multiscale_test(
-        network_type, n_scales, network_options
-    )
+    # Building Network
+    print("Building network...")
+    num_scales = len(scale_list)
+    network, input_var_list, nogaussian_layer, gaussian_layer = \
+        build_func(num_scales)
 
-    pool_filter_list = \
-        network_options['early_conv_dict_list'][0]['pool_filter_list']
-    upscale_factor = np.prod(pool_filter_list)
+    # Computing loss
+    target_var = T.matrix('targets')
+    epsilon = np.float32(1e-6)
+    one = np.float32(1)
+
+    output_va_var = layers.get_output(network, deterministic=True)
+    output_va_var = T.clip(output_va_var, epsilon, one-epsilon)
 
     # Load params
     utils.load_model(param_fp, network)
-    if frame_layer_type == 'gaussian':
-        idx_layer = -3
-    elif frame_layer_type == 'pre-gaussian':
-        idx_layer = -4
 
     # Get frame output layer
-    layer_list = get_all_layers(network)
-    frame_output_layer = layer_list[idx_layer]
+    if frame_layer_type == 'gaussian':
+        frame_output_layer = gaussian_layer
+    elif frame_layer_type == 'no-gaussian':
+        frame_output_layer = nogaussian_layer
 
     # Make predicting function
     frame_prediction = layers.get_output(frame_output_layer, deterministic=True)
