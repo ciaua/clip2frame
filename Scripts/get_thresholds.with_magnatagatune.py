@@ -3,8 +3,8 @@
 from clip2frame import utils
 import numpy as np
 import theano
-import theano.tensor as T
 from lasagne import layers
+import network_structure as ns
 
 
 if __name__ == '__main__':
@@ -13,6 +13,9 @@ if __name__ == '__main__':
     step_size = 1e-4
     measure_type = 'f1'
 
+    # Choosing the function for building the model
+    build_func = ns.build_fcn_gaussian_multiscale
+
     # Files and directories
     data_dir = '../data/data.magnatagatune/sample_exp_data'
     param_fp = '../data/models/sample_model.npz'
@@ -20,9 +23,12 @@ if __name__ == '__main__':
 
     # Default setting
     scale_list = [
-        "scale0",
-        "scale1",
-        "scale2",
+        "logmelspec10000.16000_512_512_128.0.standard",
+        "logmelspec10000.16000_1024_512_128.0.standard",
+        "logmelspec10000.16000_2048_512_128.0.standard",
+        "logmelspec10000.16000_4096_512_128.0.standard",
+        "logmelspec10000.16000_8192_512_128.0.standard",
+        "logmelspec10000.16000_16384_512_128.0.standard",
     ]
 
     # Load data
@@ -34,37 +40,11 @@ if __name__ == '__main__':
     X_list = X_va_list
     y = y_va
 
-    # Network options
-    network_type = 'fcn_gaussian_multiscale'
-    n_early_conv = 2
-    early_pool_size = 4
-    network_options = {
-        'early_conv_dict_list': [
-            {'conv_filter_list': [(32, 8) for ii in range(n_early_conv)],
-             'pool_filter_list': [early_pool_size
-                                  for ii in range(n_early_conv)],
-             'pool_stride_list': [None for ii in range(n_early_conv)]}
-            for ii in range(n_scales)
-        ],
-        'late_conv_dict': {
-            'conv_filter_list': [(512, 1), (512, 1)],
-            'pool_filter_list': [None, None],
-            'pool_stride_list': [None, None]
-        },
-        'dense_filter_size': 1,
-        'scan_dict': {
-            'scan_filter_list': [256],
-            'scan_std_list': [256/early_pool_size**n_early_conv],
-            'scan_stride_list': [1],
-        },
-        'final_pool_function': T.mean,  # T.max
-        'input_size_list': [128 for nn in range(n_scales)],
-        'output_size': 188,
-        'p_dropout': 0.5
-    }
-    network, input_var_list, pr_func = utils.make_network_multiscale_test(
-        network_type, n_scales, network_options
-    )
+    # Building Network
+    print("Building network...")
+    num_scales = len(scale_list)
+    network, input_var_list, nogaussian_layer, gaussian_layer = \
+        build_func(num_scales)
 
     # Load params
     utils.load_model(param_fp, network)

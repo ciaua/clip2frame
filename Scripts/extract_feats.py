@@ -3,8 +3,8 @@ import numpy as np
 
 
 def extract_melspec(in_fp, sr, win_size, hop_size, n_mels):
-    sig = librosa.core.load(in_fp, sr=sr)
-    feat = librosa.feature.melspectrogram(sig[0], sr=sr,
+    sig, sr = librosa.core.load(in_fp, sr=sr)
+    feat = librosa.feature.melspectrogram(sig, sr=sr,
                                           n_fft=win_size,
                                           hop_length=hop_size,
                                           n_mels=n_mels).T

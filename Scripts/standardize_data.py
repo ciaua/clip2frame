@@ -10,9 +10,9 @@ def standardize(feat, scaler=None):
 
 
 if __name__ == '__main__':
-    feat_tr_fp = '../data/data.magnatagatune/sample_exp_data/feat.tr.scale0.npy'
-    feat_va_fp = '../data/data.magnatagatune/sample_exp_data/feat.va.scale0.npy'
-    feat_te_fp = '../data/data.magnatagatune/sample_exp_data/feat.te.scale0.npy'
+    feat_tr_fp = '../data/data.magnatagatune/sample_exp_data/feat.tr.npy'
+    feat_va_fp = '../data/data.magnatagatune/sample_exp_data/feat.va.npy'
+    feat_te_fp = '../data/data.magnatagatune/sample_exp_data/feat.te.npy'
 
     feat_tr = np.load(feat_tr_fp)
     feat_va = np.load(feat_va_fp)
