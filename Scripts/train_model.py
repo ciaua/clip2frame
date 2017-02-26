@@ -9,16 +9,27 @@ from clip2frame import utils
 floatX = theano.config.floatX
 
 if __name__ == '__main__':
-    # Data options
-    data_dir = '../data/data.magnatagatune/sample_exp_data'
+    # Training data directory
+    # The complete MagnaATagATune training/testing data can be downloaded from
+    # http://mac.citi.sinica.edu.tw/~liu/data/exp_data.MagnaTagATune.188tags.zip
+    # After downloading, replace the data_dir with the new directory path
+    use_real_data = False
+
+    if use_real_data:
+        # Point to the directory you download
+        data_dir = '../exp_data.MagnaTagATune'
+    else:
+        data_dir = '../data/data.magnatagatune/sample_exp_data'
+
+    # Path for saving the trained parameters
     param_fp = '../data/models/sample_model.npz'
 
     # Training options
-    build_func = ns.build_fcn_gaussian_multiscale
-    lr = 0.01
-    loss_function = lasagne.objectives.binary_crossentropy
-    n_epochs = 10
-    batch_size = 1  # we use 10 for real data
+    build_func = ns.build_fcn_gaussian_multiscale  # Build training model
+    lr = 0.01  # Learning rate
+    loss_function = lasagne.objectives.binary_crossentropy  # Loss function
+    n_epochs = 1  # Number of trianing epochs. We use 100 for the real data
+    batch_size = 10  # Minibatch size. We use 10 for the real data
     scale_list = [
         "logmelspec10000.16000_512_512_128.0.standard",
         "logmelspec10000.16000_1024_512_128.0.standard",

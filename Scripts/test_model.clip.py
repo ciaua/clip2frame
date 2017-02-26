@@ -10,15 +10,25 @@ if __name__ == '__main__':
     # Test settings
     build_func = ns.build_fcn_gaussian_multiscale
     test_measure_type_list = ['mean_auc_y', 'mean_auc_x', 'map_y', 'map_x']
-    n_top_tags_te = 50  # 188
+    n_top_tags_te = 50  # Number of tags used for testing
+
+    # Test data directory
+    # The complete MagnaATagATune training/testing data can be downloaded from
+    # http://mac.citi.sinica.edu.tw/~liu/data/exp_data.MagnaTagATune.188tags.zip
+    # After downloading, replace the data_dir with the new directory path
+    use_real_data = False
+
+    if use_real_data:
+        # Point to the directory you download
+        data_dir = '../exp_data.MagnaTagATune'
+    else:
+        data_dir = '../data/data.magnatagatune/sample_exp_data'
 
     # Files
-    param_fp = '../data/models/sample_model.npz'
-    standardizer_dir = '../data/standardizers/'
+    param_fp = '../data/models/model.20160309_111546.npz'
     tag_tr_fp = '../data/data.magnatagatune/tag_list.top188.txt'
     tag_te_fp = '../data/data.magnatagatune/tag_list.top{}.txt'.format(
         n_top_tags_te)
-    data_dir = '../data/data.magnatagatune/sample_exp_data'
 
     # Model
     scale_list = [
@@ -37,8 +47,8 @@ if __name__ == '__main__':
     label_idx_list = [tag_tr_list.index(tag) for tag in tag_te_list]
 
     # Load data
+    print("Loading data...")
     X_te_list, y_te = utils.load_data_multiscale_te(data_dir, scale_list)
-    n_sources = len(scale_list)
 
     # Building Network
     print("Building network...")
@@ -59,6 +69,7 @@ if __name__ == '__main__':
     utils.load_model(param_fp, network)
 
     # Predict
+    print('Predicting...')
     pred_list_raw = utils.predict_multiscale(X_te_list, func_pr)
     pred_all_raw = np.vstack(pred_list_raw)
 

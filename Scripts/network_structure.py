@@ -74,6 +74,7 @@ def build_fcn_gaussian_multiscale(num_scales):
 
     network = layers.Conv2DLayer(
         layers.dropout(network, p=0.5), 188, (1, 1), (1, 1),
+        nonlinearity=lasagne.nonlinearities.sigmoid,
         name='late_conv.{}_output'.format(ii)
     )
 
@@ -163,6 +164,7 @@ def build_fcn_fixedgaussian_multiscale(num_scales):
 
     network = layers.Conv2DLayer(
         layers.dropout(network, p=0.5), 188, (1, 1), (1, 1),
+        nonlinearity=lasagne.nonlinearities.sigmoid,
         name='late_conv.{}_output'.format(ii)
     )
 
@@ -252,6 +254,7 @@ def build_fcn_multiscale(num_scales):
 
     network = layers.Conv2DLayer(
         layers.dropout(network, p=0.5), 188, (1, 1), (1, 1),
+        nonlinearity=lasagne.nonlinearities.sigmoid,
         name='late_conv.{}_output'.format(ii)
     )
     nogaussian_layer = network

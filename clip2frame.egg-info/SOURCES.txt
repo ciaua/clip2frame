@@ -1,4 +1,3 @@
-README.rst
 setup.py
 clip2frame/__init__.py
 clip2frame/layers.py

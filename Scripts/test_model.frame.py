@@ -2,29 +2,49 @@ import os
 from clip2frame import utils, measure
 import numpy as np
 import theano
-import theano.tensor as T
 from lasagne import layers
 import network_structure as ns
 
 
 if __name__ == '__main__':
-    # Test Options
+    # Data directories
+    # The complete MedleyDB testing data can be downloaded here:
+    #
+    # Feature:
+    # http://mac.citi.sinica.edu.tw/~liu/data/feature.MedleyDB.zip
+    #
+    # Annoatation:
+    # http://mac.citi.sinica.edu.tw/~liu/data/annotation.medleydb.top9.zip
+    #
+    # After downloading, replace the base_feat_dir and anno_dir
+    # with the new directory paths
+    use_real_data = False
+
+    if use_real_data:
+        # Point to the directories you download
+        base_feat_dir = '../feature.MedleyDB'
+        anno_dir = '../annotation.medleydb.top9/16000_512'
+    else:
+        base_feat_dir = '../data/data.medleydb/sample_features'
+        anno_dir = '../data/data.medleydb/sample_annotations.top9'
+
+    # Choosing the function for building the model
     build_func = ns.build_fcn_gaussian_multiscale
 
-    frame_layer_type = 'gaussian'  # 'gaussian' or 'no-gaussian'
+    # The layer for frame-level output: 'gaussian' or 'no-gaussian'
+    frame_layer_type = 'gaussian'
 
-    test_measure_type_list = ['precision_micro', 'recall_micro', 'f1_micro']
+    # test_measure_type_list = ['precision_micro', 'recall_micro', 'f1_micro']
 
-    # test_measure_type_list = ['precision_micro', 'precision_macro',
-    #                           'recall_micro', 'recall_macro',
-    #                           'f1_micro', 'f1_macro']
+    test_measure_type_list = ['precision_micro', 'precision_macro',
+                              'recall_micro', 'recall_macro',
+                              'f1_micro', 'f1_macro']
 
-    upscale_method = 'naive'  # 'naive' or 'patching'
+    # Upscale method: 'naive' or 'patching'
+    upscale_method = 'naive'
     threshold_source = 'MedleyDB'  # 'MedleyDB' or 'MagnaTagATune'
 
     # Files and directories
-    base_te_dir = '../data/data.medleydb'
-
     model_dir = '../data/models'
     param_fp = '../data/models/model.20160309_111546.npz'
     standardizer_dir = '../data/standardizers'
@@ -35,7 +55,7 @@ if __name__ == '__main__':
         '../data/data.medleydb/instrument_list.medleydb_magnatagatune.top9.csv'
 
     # Default setting
-    upscale_factor = 16
+    upscale_factor = 16  # The total pooling size from all convolution layers
     scale_list = [
         "logmelspec10000.16000_512_512_128.0.raw",
         "logmelspec10000.16000_1024_512_128.0.raw",
@@ -44,13 +64,14 @@ if __name__ == '__main__':
         "logmelspec10000.16000_8192_512_128.0.raw",
         "logmelspec10000.16000_16384_512_128.0.raw",
     ]
+    feat_dir_list = [os.path.join(base_feat_dir, scale) for scale in scale_list]
     num_scales = len(scale_list)
-
-    feat_dir_list = [os.path.join(base_te_dir, 'sample_features', scale)
-                     for scale in scale_list]
-    anno_dir = os.path.join(base_te_dir, 'sample_annotations.top9')
-
-    fn_list = os.listdir(anno_dir)
+    if use_real_data:
+        fn_list_fp = '../data/data.medleydb/fn.te.txt'
+        fn_list = ['{}.npy'.format(fn)
+                   for fn in utils.read_lines(fn_list_fp)]
+    else:
+        fn_list = os.listdir(anno_dir)
 
     # Load tag list
     tag_idx_list = utils.get_test_tag_indices(tag_tr_fp, tag_te_fp, tag_conv_fp)
@@ -67,14 +88,6 @@ if __name__ == '__main__':
     num_scales = len(scale_list)
     network, input_var_list, nogaussian_layer, gaussian_layer = \
         build_func(num_scales)
-
-    # Computing loss
-    target_var = T.matrix('targets')
-    epsilon = np.float32(1e-6)
-    one = np.float32(1)
-
-    output_va_var = layers.get_output(network, deterministic=True)
-    output_va_var = T.clip(output_va_var, epsilon, one-epsilon)
 
     # Load params
     utils.load_model(param_fp, network)
@@ -128,6 +141,7 @@ if __name__ == '__main__':
         prediction = utils.upscale(func, feat_list,
                                    upscale_method, upscale_factor,
                                    in_axis, out_axis)
+        # raw_input(123)
         prediction = prediction[0].T
 
         prediction = prediction[:n_frames]
