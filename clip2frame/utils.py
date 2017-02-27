@@ -37,6 +37,18 @@ def read_lines(file_path):
         return data
 
 
+def write_lines(file_path, data_list):
+    with open(file_path, 'w', **opts_write) as opdwf:
+        opdwf.writelines([str(term)+'\n' for term in data_list])
+
+
+def read_tsv(file_path):
+    with open(file_path, 'r', **opts_read) as opdrf:
+        csv_reader = csv.reader(opdrf, delimiter='\t')
+        data = [term for term in csv_reader]
+        return data
+
+
 def read_csv(file_path):
     with open(file_path, 'r', **opts_read) as opdrf:
         csv_reader = csv.reader(opdrf)
@@ -143,6 +155,12 @@ def load_data_multiscale_va(data_dir, scale_list):
     y_va = y_va_list[0]
 
     return X_va_list, y_va
+
+
+# Recursively convert string to int in a list
+def to_int(data_list):
+    return [to_int(term)
+            if type(term) == list else int(term) for term in data_list]
 
 
 # Iterate inputs

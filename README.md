@@ -28,6 +28,10 @@ Testing -- Frame level
 ----------------------
 Scripts/test_model.frame.py
 
+Network structure
+-----------------
+Scripts/network_structure.py
+
 Feature extraction
 ------------------
 Scripts/extract_feats.py
@@ -36,9 +40,13 @@ Standardize data
 ----------------
 Scripts/standardize_data.py
 
-Network structure
------------------
-Scripts/network_structure.py
+Process annotations
+-------------------
+Scripts/process_annotations.top_n_tags.py
+
+Make experimental data in Numpy format
+--------------------------------------
+Scripts/make_exp_data.py
 
 Threshods derivation
 --------------------
